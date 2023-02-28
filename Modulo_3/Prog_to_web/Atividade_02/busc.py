@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+import collections
 
 
 def coleta_e_organiza_dados(soup, palavra_chave, url):
@@ -109,11 +110,25 @@ def search(palavra, url, profundidade=0):
             else:
                 links_utilizados[link] = {'qtd_referencias': count}
 
-       resultados_com_ranking = definir_ranks(resultados, links_utilizados)
-       exibe_por_ranking(resultados_com_ranking)
-       
-       except:
+        resultados_com_ranking = definir_ranks(resultados, links_utilizados)
+        exibe_por_ranking(resultados_com_ranking)
+    except:
        print('Ops, ocorreu um erro na função "search"... \n')
-    
-    return None
+       return None
 
+
+def main():
+    print("Digite a url que deseja iniciar a busca a seguir: ")
+    url = input('=> ')
+
+    print("ok..\n Agora digite a palavra que deseja buscar: ")
+    palavra_chave = input('=> ')
+
+    print("Certo..\n Agora insira a Profundidade da Busca: ")
+    profundidade_busca = int(input("=> "))
+
+    retorno = search(palavra_chave, url, profundidade_busca)
+    exibe_por_ranking(retorno)
+
+
+main()
