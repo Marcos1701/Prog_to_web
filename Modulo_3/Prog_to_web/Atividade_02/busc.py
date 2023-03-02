@@ -1,20 +1,26 @@
+
+
+# Optimized Code
 import collections
 import requests
+import requests_cache
 from bs4 import BeautifulSoup
 
+requests_cache.install_cache("banco")
 
-def coleta_e_organiza_dados(soup, palavra_chave, url):
+
+def collect_and_organize_data(soup, keyword, url):
     try:
-        ocorrencias_pc = []
-        for ocorrencia in soup.find_all(text=lambda text: palavra_chave in text):
-            texto = ocorrencia.parent.get_text()
-            index = texto.index(palavra_chave)
-            inicio = texto[max(index - 20, 0):index]
-            fim = texto[index+len(palavra_chave):index+len(palavra_chave)+20]
-            ocorrencias_pc.append(f'{inicio}{palavra_chave}{fim}')
+        occurrences_pc = []
+        for occurrence in soup.find_all(keyword):
+            text = occurrence.parent.get_text()
+            index = text.index(keyword)
+            start = text[max(index - 20, 0):index]
+            end = text[index+len(keyword):index+len(keyword)+20]
+            occurrences_pc.append(f'{start}{keyword}{end}')
 
         links = []
-        for a in soup.find_all('a', href=True):
+        for a in soup.find_all('a'):
             link = a['href']
             if link.startswith('http://') or link.startswith('https://'):
                 links.append(link)
@@ -27,92 +33,94 @@ def coleta_e_organiza_dados(soup, palavra_chave, url):
 
         data = {
             'url': url,
-            'ocorrencias': ocorrencias_pc,
+            'occurrences': occurrences_pc,
             'links': links,
             'ranking': 0
         }
         return data
     except Exception as e:
         print(
-            f"An error occurred in the 'coleta_e_organiza_dados' function: {e}\n")
+            f"An error occurred in the 'collect_and_organize_data' function: {e}\n")
         return None
 
 
-def definir_ranks(resultados, links):
+def set_ranks(results, links):
     try:
-        for resultado in resultados:
-            ocorrencias = len(resultado['ocorrencias'])
-            rank = ocorrencias
-            ref = links[resultado['url']]['qtd_referencias']
+        for result in results:
+            occurrences = len(result['occurrences'])
+            rank = occurrences
+            ref = links[result['url']]['qtd_references']
 
             if (ref <= 10):
                 rank += ref * 0.5
             else:
                 rank += ref * 1.5
 
-            resultado['ranking'] = rank
+            result['ranking'] = rank
 
-        return resultados
+        return results
     except:
-        print('Ops, ocorreu um erro na função "definir_ranks"... \n')
+        print('Ops, an error occurred in the "set_ranks" function... \n')
         return None
 
 
-def exibe_por_ranking(resultados):
+def display_by_ranking(results):
     try:
-        print("----- Resultados da Busca de Profundidade -----")
-        dados_ordenados = sorted(
-            resultados, key=lambda k: k['ranking'], reverse=True)
-        for dado in dados_ordenados:
-            print(f'url: {dado["url"]}')
-            print("Resultados da busca: ")
-            for resultado in dado['ocorrencias']:
-                print(f" - {resultado}")
+        print("----- Deep Search Results -----")
+        sorted_data = sorted(
+            results, key=lambda k: k['ranking'], reverse=True)
+        for data in sorted_data:
+            print(f'url: {data["url"]}')
+            print("Search results: ")
+            for result in data['occurrences']:
+                print(f" - {result}")
             print()
     except Exception as e:
-        print(f'Ops, ocorreu um erro na função "exibe_por_ranking": {e} \n')
+        print(
+            f'Ops, an error occurred in the "display_by_ranking" function: {e} \n')
 
 
-def search(palavra, url, profundidade=0):
+def search(word, url, depth=0):
     try:
-        retorno = requests.get(url)
-        soup = BeautifulSoup(retorno.content, 'html.parser')
+        response = requests.get(url)
+        soup = BeautifulSoup(response.content, 'html.parser')
 
-        resultados = []
-        links_utilizados = {url: {'qtd_referencias': 0}}
-        json_resultante = coleta_e_organiza_dados(soup, palavra, url)
+        results = []
+        used_links = {url: {'qtd_references': 0}}
+        resulting_json = collect_and_organize_data(soup, word, url)
 
-        if json_resultante is not None:
-            resultados.append(json_resultante)
+        if resulting_json is not None:
+            results.append(resulting_json)
 
-        for _ in range(profundidade):
-            novos_links = []
-            for link in json_resultante['links']:  # lista de links
+        for _ in range(depth):
+            new_links = []
+            for link in resulting_json['links']:  # list of links
                 if not link.startswith(('http', 'www')):
                     continue
 
-                if link not in links_utilizados:
-                    links_utilizados[link] = {'qtd_referencias': 0}
-                    retorno = requests.get(link)
-                    soup = BeautifulSoup(retorno.content, 'html.parser')
-                    json_resultante = coleta_e_organiza_dados(
-                        soup, palavra, link)
+                if link not in used_links:
+                    used_links[link] = {'qtd_references': 0}
+                    response = requests.get(link)
+                    soup = BeautifulSoup(response.content, 'html.parser')
+                    resulting_json = collect_and_organize_data(
+                        soup, word, link)
 
-                    if json_resultante is not None:
-                        resultados.append(json_resultante)
-                        novos_links.extend(json_resultante['links'])
-                        # atualiza o número de referências dos links já utilizados
+                    if resulting_json is not None:
+                        results.append(resulting_json)
+                        new_links.extend(resulting_json['links'])
+                        # update the number of references of the already used links
 
-        # conta quantas vezes cada link aparece na lista de novos links
-        # e atualiza o número de referências dos links já utilizados
-        contador_links = collections.Counter(novos_links)
-        for link, count in contador_links.items():
-            links_utilizados[link]['qtd_referencias'] += count
+        # count how many times each link appears in the new links list
+        # and update the number of references of the already used links
+        link_counter = collections.Counter(new_links)
+        for link, count in link_counter.items():
+            used_links[link]['qtd_references'] += count
 
-        resultados_com_ranking = definir_ranks(resultados, links_utilizados)
-        exibe_por_ranking(resultados_com_ranking)
+        results_with_ranking = set_ranks(results, used_links)
+        
+        return results_with_ranking
     except:
-        print('Ops, ocorreu um erro na função "search"... \n')
+        print('Ops, an error occurred in the "search" function... \n')
 
     return None
 
@@ -122,13 +130,13 @@ def main():
     url = input('=> ')
 
     print("ok..\n Agora digite a palavra que deseja buscar: ")
-    palavra_chave = input('=> ')
+    keyword = input('=> ')
 
     print("Certo..\n Agora insira a Profundidade da Busca: ")
-    profundidade_busca = int(input("=> "))
+    search_depth = int(input("=> "))
 
-    retorno = search(palavra_chave, url, profundidade_busca)
-    exibe_por_ranking(retorno)
+    response = search(keyword, url, search_depth)
+    display_by_ranking(response)
 
 
 main()
