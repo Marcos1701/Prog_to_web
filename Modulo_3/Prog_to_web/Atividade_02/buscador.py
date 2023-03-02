@@ -23,6 +23,7 @@ def definir_ranks(resultados) :
         
 def search(url, palavra, prof, url_ja_buscadas = []):
     if url in links_utilizados:
+        links_utilizados['url']['qtd_referencias'] += 1
         return []
 
     pagina = requests.get(url)
