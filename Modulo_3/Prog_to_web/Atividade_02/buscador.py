@@ -1,6 +1,7 @@
 import requests
 import requests_cache
 from bs4 import BeautifulSoup
+import collections
 
 requests_cache.install_cache()
 
@@ -14,7 +15,10 @@ def exibir_retorno(resultados):
         print("Ops, um valor invalido foi enviado...")
 
 def definir_ranks(resultados) :
-    for resultado in resultados:
+    link_counter = collections.Counter(new_links)
+        for link, count in link_counter.items():
+            used_links[link]['qtd_references'] += count
+
         
         
 def search(url, palavra, prof, url_ja_buscadas = []):
