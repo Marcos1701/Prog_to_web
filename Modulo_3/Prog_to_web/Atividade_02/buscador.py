@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 
 requests_cache.install_cache()
 
-
+links_utilizados = []
 def exibir_retorno(resultados):
     if resultados is not None:
        for resultado in resultados:
@@ -13,7 +13,14 @@ def exibir_retorno(resultados):
     else:
         print("Ops, um valor invalido foi enviado...")
 
+def definir_ranks(resultados) :
+    for resultado in resultados:
+        
+        
 def search(url, palavra, prof, url_ja_buscadas = []):
+    if url in links_utilizados:
+        return []
+
     pagina = requests.get(url)
     soup = BeautifulSoup(pagina, 'html.parser')
     
