@@ -42,6 +42,8 @@ def search(url, palavra, prof, url_ja_buscadas = []):
             links.append(f"{url.split('//')[0]}{link}")
         elif link.startswith('/'):
             links.append(f"{url}{link}")
+        elif link os None or link == ' or link == '#':
+            continue
         else:
             links.append(f"{url}/{link}")
     
