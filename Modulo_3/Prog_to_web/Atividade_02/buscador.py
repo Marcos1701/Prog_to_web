@@ -52,7 +52,11 @@ def search(url, palavra, prof, url_ja_buscadas = []):
                ocorrencias.append(pagina[0: len(palavra) + 20])
             else:
                ocorrencias.append(pagina[0: len(soup.get_text())])
-    
+   
+    links_utilizados.append({
+        'url' = url, 
+        'qtd_referencias': 0
+    }) 
     resultado = {
         'url': url,
         'ocorrencias': ocorrencias,
