@@ -66,39 +66,28 @@ def search(url, palavra, prof_busca):
     return retorno
 
 
-def buscar_ocorrencias(url, palavra):
-    print(url)
-    pagina = requests.get(url)
-    soup = BeautifulSoup(pagina.text, 'html.parser')
+#def buscar_ocorrencias(url, palavra):
+#    print(url)
+ #   pagina = requests.get(url)
+ #   soup = BeautifulSoup(pagina.text, 'html.parser')
 
-    if not soup.body:
-        return {'ocorrencias': [], 'qtd_ocorrencias': 0}
-    print("Carregando pagina: ", url)
+ #   if not soup.body:
+#        return {'ocorrencias': [], 'qtd_ocorrencias': 0}
+#    print("Carregando pagina: ", url)
 
-    trechos = [tag.get_text() for tag in soup.body.find_all(text=re.compile('\S'))]
-    trechos_com_palavra = [trecho for trecho in trechos if palavra in trecho]
-
-
-    ocorrencias = ocorrencia(url)
-    ocorrencias._ocorrencias_palavra = trechos_com_palavra
-    ocorrencias._qtd_ocorrencias = sum(trecho.count(palavra) for trecho in trechos_com_palavra)
-
-    return ocorrencias
+#    trechos = [tag.get_text() for tag in soup.body.find_all(text=re.compile('\S'))]
+#    trechos_com_palavra = [trecho for trecho in trechos if palavra in trecho]
 
 
-def buscar_ocorrencias(url, palavra):
-    print(url)
-    pagina = requests.get(url)
-    soup = BeautifulSoup(pagina.text, 'html.parser')
+#    ocorrencias = ocorrencia(url)
+ #   ocorrencias._ocorrencias_palavra = trechos_com_palavra
+ #   ocorrencias._qtd_ocorrencias = sum(trecho.count(palavra) for trecho in trechos_com_palavra)
 
-    if not soup.body:
-        return {'ocorrencias': [], 'qtd_ocorrencias': 0}
-    print("Carregando pagina: ", url)
+#    return ocorrencias
 
 
 def buscar_ocorrencias(url, palavra):
     print(url)
-    
     try:
         pagina = requests.get(url)
     except AttributeError:
@@ -108,25 +97,37 @@ def buscar_ocorrencias(url, palavra):
     return texto.find_all(string=lambda text: palavra in text)
 
 
-    if not soup.body:
-        return {'ocorrencias': [], 'qtd_ocorrencias': 0}
-    print("Carregando pagina: ", url)
-    try:
-        texto = soup.body.get_text()
-    except AttributeError:
-        print("Erro ao buscar texto no body da pagina, url: ", url)
-        return {'ocorrencias': [], 'qtd_ocorrencias': 0}
-    # html.find_all(string=lambda text: searchTerms in text)
-    trechos = list(filter(bool, texto.split('\n')))
+#def buscar_ocorrencias(url, palavra):
+ #   print(url)
+    
+ #   try:
+#        pagina = requests.get(url)
+#    except AttributeError:
+#        print("Erro ao buscar texto no body da pagina, url: ", url)
+#        return {'ocorrencias': [], 'qtd_ocorrencias': 0}
+#    texto = BeautifulSoup(pagina.text, 'html.parser')
+#    return texto.find_all(string=lambda text: palavra in text)
 
-    print("Obtendo as ocorrencias da palavra: ", palavra, " na pagina: ", url)
-    ocorrencias = ocorrencia(url)
 
-    for trecho in trechos:
-        if palavra in trecho:
-            ocorrencias._ocorrencias_palavra.append(trecho)
-            ocorrencias._qtd_ocorrencias += trecho.count(palavra)
-    return ocorrencias
+ #   if not soup.body:
+ #       return {'ocorrencias': [], 'qtd_ocorrencias': 0}
+  #  print("Carregando pagina: ", url)
+ #   try:
+  #      texto = soup.body.get_text()
+  #  except AttributeError:
+  #      print("Erro ao buscar texto no body da pagina, url: ", url)
+ #       return {'ocorrencias': [], 'qtd_ocorrencias': 0}
+ #   # html.find_all(string=lambda text: searchTerms in text)
+  #  trechos = list(filter(bool, texto.split('\n')))
+
+ #   print("Obtendo as ocorrencias da palavra: ", palavra, " na pagina: ", url)
+#    ocorrencias = ocorrencia(url)
+
+ #   for trecho in trechos:
+  #      if palavra in trecho:
+ #           ocorrencias._ocorrencias_palavra.append(trecho)
+  #          ocorrencias._qtd_ocorrencias += trecho.count(palavra)
+ #   return ocorrencias
 
 
 
