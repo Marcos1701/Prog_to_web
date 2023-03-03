@@ -86,11 +86,27 @@ def buscar_ocorrencias(url, palavra):
     return ocorrencias
 
 
-
 def buscar_ocorrencias(url, palavra):
     print(url)
     pagina = requests.get(url)
     soup = BeautifulSoup(pagina.text, 'html.parser')
+
+    if not soup.body:
+        return {'ocorrencias': [], 'qtd_ocorrencias': 0}
+    print("Carregando pagina: ", url)
+
+
+def buscar_ocorrencias(url, palavra):
+    print(url)
+    
+    try:
+        pagina = requests.get(url)
+    except AttributeError:
+        print("Erro ao buscar texto no body da pagina, url: ", url)
+        return {'ocorrencias': [], 'qtd_ocorrencias': 0}
+    texto = BeautifulSoup(pagina.text, 'html.parser')
+    return texto.find_all(string=lambda text: palavra in text)
+
 
     if not soup.body:
         return {'ocorrencias': [], 'qtd_ocorrencias': 0}
