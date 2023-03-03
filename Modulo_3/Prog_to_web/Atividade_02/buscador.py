@@ -10,7 +10,8 @@ class Url:
     def __init__(self, url):
         self._url = url
         self.links = []
-        self._ocorrencias = ocorrencia(url)
+        self._ocorrencias = Ocorrencias(url)
+        self._qtd_ocorrencias = 0
 
     @property
     def url(self):
@@ -18,42 +19,54 @@ class Url:
 
     @property
     def ocorrencias(self):
-        return self._ocorrencias.ocorrencias_palavra
+        return self._ocorrencias
 
-    @ocorrencias.setter
-    def ocorrencias(self, value):
-        self._ocorrencias = value
-
-    @property
-    def qtd(self):
-        return self._ocorrencias.qtd
-
-
-class ocorrencia:
-    def __init__(self, url):
-        self._url = url
-        self._ocorrencias_palavra = []
-        self._qtd_ocorrencias = 0
-
-    @_ocorrencias_palavra.setter
-    def _ocorrencias_palavra(self, value):
-        self._ocorrencias_palavra = value
-
-    @_qtd_ocorrencias.setter
-    def _qtd_ocorrencias(self, value):
-        self._qtd_ocorrencias = value
-
-    @property
-    def url(self):
-        return self._url
-
-    @property
-    def ocorrencias_palavra(self):
-        return self._ocorrencias_palavra
     @property
     def qtd(self):
         return self._qtd_ocorrencias
     
+    @ocorrencias.setter
+    def ocorrencias(self, value):
+        self._ocorrencias = value
+
+class Ocorrencias:
+    def __init__(self, url):
+        self._url = url
+        self._ocorrencias_palavra
+        self._qtd_ocorrencias = 0
+
+
+    @property
+    def url(self):
+        return self._url
+    
+    @property
+    def ocorrencia(self):
+        return self._ocorrencias_palavra
+
+    #@qtd_ocorrencias.setter
+    #def qtd_ocorrencias(self, valor):
+    #    self._qtd_ocorrencias = valor
+
+def buscar_ocorrencias(url, palavra):
+    print(url)
+    try:
+        pagina = requests.get(url)
+    except AttributeError:
+        print("Erro ao buscar texto no body da pagina, url: ", url)
+        return {'ocorrencias': [], 'qtd_ocorrencias': 0}
+    texto = BeautifulSoup(pagina.text, 'html.parser')
+    ocorrencias = Ocorrencias(url)
+    trechos = re.finditer(palavra, texto)
+    print(trechos)
+    #aux = []
+
+    for trecho in trechos:
+        if palavra in trecho:
+           ocorrencias._ocorrencias_palavra.append(trecho)
+           ocorrencias._qtd_ocorrencias += trecho.count(palavra)
+
+    return ocorrencias
 
 
 def search(url, palavra, prof_busca):
@@ -61,9 +74,10 @@ def search(url, palavra, prof_busca):
     retorno = []
     retorno.append(Url(url))
     links = [url]
-    for i in range(prof_busca):
+    for i in range(0, prof_busca):
         links = get_links(links, palavra, retorno)
     return retorno
+
 
 
 #def buscar_ocorrencias(url, palavra):
@@ -86,16 +100,6 @@ def search(url, palavra, prof_busca):
 #    return ocorrencias
 
 
-def buscar_ocorrencias(url, palavra):
-    print(url)
-    try:
-        pagina = requests.get(url)
-    except AttributeError:
-        print("Erro ao buscar texto no body da pagina, url: ", url)
-        return {'ocorrencias': [], 'qtd_ocorrencias': 0}
-    texto = BeautifulSoup(pagina.text, 'html.parser')
-    return texto.find_all(string=lambda text: palavra in text)
-
 
 #def buscar_ocorrencias(url, palavra):
  #   print(url)
@@ -106,7 +110,8 @@ def buscar_ocorrencias(url, palavra):
 #        print("Erro ao buscar texto no body da pagina, url: ", url)
 #        return {'ocorrencias': [], 'qtd_ocorrencias': 0}
 #    texto = BeautifulSoup(pagina.text, 'html.parser')
-#    return texto.find_all(string=lambda text: palavra in text)
+#    ocorrencias = ocorrencia(url)
+
 
 
  #   if not soup.body:
