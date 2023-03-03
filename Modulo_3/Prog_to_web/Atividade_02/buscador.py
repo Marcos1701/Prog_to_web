@@ -74,6 +74,26 @@ def buscar_ocorrencias(url, palavra):
     if not soup.body:
         return {'ocorrencias': [], 'qtd_ocorrencias': 0}
     print("Carregando pagina: ", url)
+
+    trechos = [tag.get_text() for tag in soup.body.find_all(text=re.compile('\S'))]
+    trechos_com_palavra = [trecho for trecho in trechos if palavra in trecho]
+
+    ocorrencias = ocorrencia(url)
+    ocorrencias._ocorrencias_palavra = trechos_com_palavra
+    ocorrencias._qtd_ocorrencias = sum(trecho.count(palavra) for trecho in trechos_com_palavra)
+
+    return ocorrencias
+
+
+
+def buscar_ocorrencias(url, palavra):
+    print(url)
+    pagina = requests.get(url)
+    soup = BeautifulSoup(pagina.text, 'html.parser')
+
+    if not soup.body:
+        return {'ocorrencias': [], 'qtd_ocorrencias': 0}
+    print("Carregando pagina: ", url)
     try:
         texto = soup.body.get_text()
     except AttributeError:
