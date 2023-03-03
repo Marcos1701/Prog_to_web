@@ -78,6 +78,7 @@ def buscar_ocorrencias(url, palavra):
     trechos = [tag.get_text() for tag in soup.body.find_all(text=re.compile('\S'))]
     trechos_com_palavra = [trecho for trecho in trechos if palavra in trecho]
 
+
     ocorrencias = ocorrencia(url)
     ocorrencias._ocorrencias_palavra = trechos_com_palavra
     ocorrencias._qtd_ocorrencias = sum(trecho.count(palavra) for trecho in trechos_com_palavra)
@@ -99,7 +100,7 @@ def buscar_ocorrencias(url, palavra):
     except AttributeError:
         print("Erro ao buscar texto no body da pagina, url: ", url)
         return {'ocorrencias': [], 'qtd_ocorrencias': 0}
-
+    # html.find_all(string=lambda text: searchTerms in text)
     trechos = list(filter(bool, texto.split('\n')))
 
     print("Obtendo as ocorrencias da palavra: ", palavra, " na pagina: ", url)
