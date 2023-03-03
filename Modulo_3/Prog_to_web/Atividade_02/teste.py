@@ -1,104 +1,155 @@
 import requests
-#import requests_cache
+import requests_cache
 from bs4 import BeautifulSoup
-import collections
+import re
 
-#requests_cache.install_cache()
+requests_cache.install_cache('banco')
 
-links_utilizados = []
-def exibir_retorno(resultados):
-    if resultados is not None:
-       for resultado in resultados:
-           for ocorrencia in resultado['ocorrencias']:
-               print(f' - {ocorrencia}')
-    else:
-        print("Ops, um valor invalido foi enviado...")
 
-def definir_ranks(resultados) :
+class Url:
+    def __init__(self, url):
+        self._url = url
+        self.links = []
+        self._ocorrencias = ocorrencia(url)
+        self.rank = 0
+        self.referencias = 0
 
-    for link in links_utilizados:
-        for link_2 in links_utilizados:
-            link['qtd_referencias'] += link_2['links'].count(link['url'])
+    @property
+    def url(self):
+        return self._url
 
-    for resultado in resultados:
-        occurrences = len(resultado['ocorrencias'])
-        rank = occurrences
-        ref = resultado['qtd_referencias']
+    @property
+    def ocorrencias(self):
+        return self._ocorrencias.ocorrencias_palavra
 
-        if (ref <= 10):
-            rank += ref * 0.5
-        else:
-            rank += ref * 1.5
+    @ocorrencias.setter
+    def ocorrencias(self, value):
+        self._ocorrencias = value
 
-        resultado['ranking'] = rank
+    @property
+    def qtd(self):
+        return self._ocorrencias.qtd
 
-        return resultados
-        
 
-        
-        
-def search(url, palavra, prof, url_ja_buscadas = []):
-    if url in links_utilizados:
-        links_utilizados['url']['qtd_referencias'] += 1
-        return []
+class ocorrencia:
+    def __init__(self, url):
+        self._url = url
+        self._ocorrencias_palavra = []
+        self._qtd_ocorrencias = 0
 
-    pagina = requests.get(url)
-    soup = BeautifulSoup(pagina.text, 'html.parser')
+    @property
+    def url(self):
+        return self._url
+
+    @property
+    def ocorrencias_palavra(self):
+        return self._ocorrencias_palavra
+
+    @property
+    def qtd(self):
+        return self._qtd_ocorrencias
+
     
-    ocorrencias = []
-    tags_a = soup.find_all('a')
-    links = []
-    
-    for a in tags_a:
-        if a.has_attr("href"):
-          link = a['href']
-        
-        # startswith verifica se a sting começa pelo que está sendo passado como parâmetro;
-        if link.startswith('http://') or link.startswith('https://'):
-            links.append(link)
-        elif link.startswith('//'):
-            links.append(f"{url.split('//')[0]}{link}")
-        elif link.startswith('/'):
-            links.append(f"{url}{link}")
-        elif link is None or link == '' or link == '#':
-            continue
-        else:
-            links.append(f"{url}/{link}")
-    
-    for ocorrencia in soup.find_all(palavra):
-        if(ocorrencia.index >= 20):
-            if(ocorrencia.index + len(palavra) + 20 <= len(soup.get_text())):
-               ocorrencias.append(soup[int(ocorrencia.index) - 20: len(palavra) + 20])
+def set_ranks(results, links):
+    try:
+
+        for result in results:
+            if isinstance(Url,result):
+               rank = result.qtd
+               ref = 
+
+               if (ref <= 10):
+                   rank += ref * 0.5
+                else:
+                   rank += ref * 1.5
+
+            result['ranking'] = rank
+
+        return results
+    except:
+        print('Ops, an error occurred in the "set_ranks" function... \n')
+        return None
+
+def buscar_ocorrencias(url, palavra):
+    print(url)
+    try:
+        pagina = requests.get(url)
+    except AttributeError:
+        print("Erro ao buscar texto no body da pagina, url: ", url)
+        return {'ocorrencias': [], 'qtd_ocorrencias': 0}
+    texto = BeautifulSoup(pagina.text, 'html.parser')
+    ocorrencias = ocorrencia(url)
+    trechos = texto.find_all(string=lambda text: palavra in text)
+    #aux = []
+    print(trechos)
+
+    for trecho in trechos:
+        if palavra in trecho:
+           indice = trecho.index(palavra)
+           trecho_completo = trecho[max(0, indice-20):indice+len(palavra)+20]
+           ocorrencias._ocorrencias_palavra.append(trecho_completo)
+           ocorrencias._qtd_ocorrencias += trecho.count(palavra)
+    return ocorrencias
+
+
+
+def search(url, palavra, prof_busca):
+    print("Buscando por: ", palavra)
+    retorno = []
+    retorno.append(Url(url))
+    links = [url]
+    for i in range(0, prof_busca):
+        links = get_links(links, palavra, retorno)
+    return retorno
+
+
+def get_links(links, palavra, retorno):
+    links_novos = []
+    for url in links:
+
+        pagina = requests.get(url)
+        soup = BeautifulSoup(pagina.text, 'html.parser')
+        tags_a = soup.find_all('a')
+        for a in tags_a[:5]:
+            link = a.get('href')
+            novo_link = ''
+            if not link or link == '' or link == '#' or link is None:
+                continue
+
+            if link.startswith('http://') or link.startswith('https://'):
+                novo_link = Url(link)
+                links_novos.append(novo_link)
+            elif link.startswith('//'):
+                novo_link = Url(f"{link.split('//')[0]}{link}")
+                links_novos.append(novo_link)
+            elif link.startswith('/'):
+                novo_link = Url(f"{url}{link}")
+                links_novos.append(novo_link)
+            elif link.startswith('./'):
+                novo_link = Url(f"{url}/{link.split('./')[1]}")
+                links_novos.append(novo_link)
             else:
-               ocorrencias.append(soup[int(ocorrencia.index) - 20: len(soup.get_text())])
-        else:
-            if(ocorrencia.index + len(palavra) + 20 <= len(soup.get_text())):
-               ocorrencias.append(soup[0: len(palavra) + 20])
-            else:
-               ocorrencias.append(soup[0: len(soup.get_text())])
-        print(ocorrencia)
-   
-    links_utilizados.append([{
-          'url' : url, 
-          'qtd_referencias': 0
-    }]) 
-    resultado = {
-        'url': url,
-        'ocorrencias': ocorrencias,
-        'ranking': 0,
-        'links': links,
-        'qtd_referencias': 0
-    }
-    
-    resultados = [resultado]
-    
-    url_ja_buscadas.append(url)
-    if(prof > 0):
-        for link in links:
-            resultados.append(search(link,palavra, prof - 1, url_ja_buscadas))
-    
-    return resultados
-            
+                novo_link = Url(f"{url}/{link}")
+                links_novos.append(novo_link)
+
+            ocorrencias = buscar_ocorrencias(novo_link.url, palavra)
+            novo_link.ocorrencias = ocorrencias
+            if ocorrencias is not None:
+                retorno.append(novo_link)
+               # retorno.append(ocorrencias)
+    return links_novos
+
+
+def exibir_retorno(retorno = []):
+    print("- - - - - - - - - - - - Exibindo retorno - - - - - - - - - - - -")
+    for i in range(len(retorno)):
+        if retorno[i] is not None:
+            print(f"URL: {retorno[i].url}")
+            for ocorrencia in retorno[i].ocorrencias:
+               print(f"Ocorrencias: {ocorrencia}")
+            print(f"Qtd Ocorrencias: {retorno[i].qtd}")
+
+
 def main():
     print("Digite a url que deseja iniciar a busca a seguir: ")
     url = input('=> ')
@@ -110,8 +161,8 @@ def main():
     prof_busca = int(input("=> "))
 
     retorno = search(url, palavra, prof_busca)
-    
+
     exibir_retorno(retorno)
-    
+
 
 main()
