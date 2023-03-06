@@ -1,7 +1,7 @@
 import requests
 import requests_cache
 from bs4 import BeautifulSoup
-import re
+# import re
 from typing import List
 
 requests_cache.install_cache('banco')
@@ -95,15 +95,7 @@ class ocorrencia:
 
 # Recebe uma lista de urls e remove as urls que não possuem ocorrencias da palavra-chave.
 def remover_url_sem_ocorrencias(resultados: List[Url]):
-    i = 0
-    for i in range(0, len(resultados) - 1):
-        if isinstance(resultados[i], type(Url)):
-            if resultados[i].qtd == 0:
-                for j in range(i, len(resultados) - 1):
-                    resultados[j] = resultados[j+1]
-                    j += 1
-            i += 1
-    return resultados
+    return [url for url in resultados if isinstance(url, Url) and url.qtd > 0]
 
 
 # Recebe uma lista de urls, remove as urls sem ocorrencias da palavr-chave
@@ -133,7 +125,7 @@ def set_ranks(resultados: List[Url], links: Armazena_links):
                 result.rank = rank
                 i += 1
         retorno = sorted(resultados, key=lambda x: x.rank if isinstance(
-            x, Url) else 0, reverse=True)
+            x, Url) else resultados.pop(resultados.index(x)), reverse=True)
         return retorno
 
     except Exception as e:
@@ -143,22 +135,25 @@ def set_ranks(resultados: List[Url], links: Armazena_links):
 
 # Recebe uma url e uma palavra-chave e retorna uma lista com as ocorrencias da palavra-chave.
 def buscar_ocorrencias(url, palavra: str):
-    print(url)
+    # print(url)
     try:
         pagina = requests.get(url)
         ocorrencias = ocorrencia(url)
         texto = BeautifulSoup(pagina.text, 'html.parser')
-        padrao = re.compile(r'\b{}\b'.format(palavra))
-        trechos = texto.find_all(string=padrao)
+        # padrao = re.compile(r'\b{}\b'.format(palavra))
+        # trechos = texto.find_all(string=padrao)
+        print(f"Obtendo as ocorrencias de {palavra} na pagina {url}..\n")
+        trechos = texto.find_all(string=lambda text: palavra in text)
     except Exception as e:
         print("Ocorreu um erro ao buscar o texto presente no body da pagina, url: ", url)
         print("Erro: ", e)
         return ['']
 
     for trecho in trechos:
-        if palavra in trecho:
-            ocorrencias._ocorrencias_palavra.append(trecho.get_text())
+        if trecho and trecho.text.strip():
+            ocorrencias.ocorrencias_palavra.append(trecho.text)
             ocorrencias._qtd_ocorrencias += trecho.count(palavra)
+
     return ocorrencias
 
 
@@ -171,7 +166,7 @@ def search(url_inicio: str, palavra: str, prof_busca: int):
         dados = []
 
         print("Buscando por: ", palavra)
-        dados.append(Url(url=url_inicio))
+        dados.append(Url(url=url_inicio, nivel=1))
         links.add_novo_link(url_inicio)
         [dados, links] = get_links(links, palavra, dados, prof_busca)
 
@@ -198,12 +193,13 @@ def add_ref(links: Armazena_links, results: List[Url]):
 
 # Recebe uma lista de Urls, uma palavra-chave e uma profundidade de busca e
 # retorna uma lista com as Urls analisadas.
-def get_links(links: Armazena_links, palavra: str, dados, prof_busca: int, nivel_atual: int = 1):
+def get_links(links: Armazena_links, palavra: str, dados, prof_busca: int, nivel_atual=1):
     try:
         links_novos = []
         for url in links._novos_links:
             if not links.conferir_link(url):
                 # continue
+                # print(nivel_atual)
 
                 pagina = requests.get(url)
                 soup = BeautifulSoup(pagina.text, 'html.parser')
@@ -218,12 +214,10 @@ def get_links(links: Armazena_links, palavra: str, dados, prof_busca: int, nivel
                     if link.startswith('/'):
                         # novo_link = Url((dados[0].url[:len(dados[0].url) - 1] + link).rstrip('/'))
                         novo_link = Url(
-                            dados[0].url[:len(dados[0].url) - 1] + link)
-                        novo_link.nivel = nivel_atual
+                            dados[0].url[:len(dados[0].url) - 1] + link, nivel=nivel_atual)
                         links_novos.append(novo_link)
                     elif link.startswith(dados[0].url):
-                        novo_link = Url(link)
-                        novo_link.nivel = nivel_atual
+                        novo_link = Url(link, nivel=nivel_atual)
                         links_novos.append(novo_link)
                     else:
                         continue
@@ -238,7 +232,9 @@ def get_links(links: Armazena_links, palavra: str, dados, prof_busca: int, nivel
         retorno = [dados, links]
 
         if len(links_novos) > 0 and prof_busca > 0:
-            aux = get_links(links, palavra, dados, prof_busca - 1)
+            n = nivel_atual + 1
+            aux = get_links(links, palavra, dados,
+                            prof_busca - 1, nivel_atual=n)
             retorno[0].append(aux[0])
             retorno[1] = aux[1]
 
@@ -253,14 +249,14 @@ def exibir_dados_obtidos(Dados_resultantes: List[Url]):
     try:
         print("\n- - - - - - - - - - - - Exibindo Resultados da Busca - - - - - - - - - - - -\n")
         if Dados_resultantes:
-            for i in range(len(Dados_resultantes)):
-                if Dados_resultantes[i] is not None and isinstance(Dados_resultantes[i], Url):
+            for i in range(len(Dados_resultantes) - 1):
+                if Dados_resultantes[i] is not None and isinstance(Dados_resultantes[i], Url) and Dados_resultantes[i].qtd > 0:
                     print(f"URL: {Dados_resultantes[i].url}")
                     print(f"Nivel: {Dados_resultantes[i].nivel}\n")
                     x = 1
                     print("Ocorrencias: \n")
                     for ocorrencia in Dados_resultantes[i].ocorrencias:
-                        print(f"{x} - {ocorrencia}")
+                        print(f"{x} - {ocorrencia}\n")
                         x += 1
                     print(f"Qtd Ocorrencias: {Dados_resultantes[i].qtd}")
                     print(
