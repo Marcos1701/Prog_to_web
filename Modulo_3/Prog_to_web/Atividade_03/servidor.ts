@@ -1,13 +1,17 @@
+
+
 import * as net from 'net';
 
-
-// const palavra = palavras[Math.floor(Math.random() * (palavras.length - 1))]
-// let valor_continuidade: boolean = false
+function isSpecialCharacter(char) {
+    var pattern = /[~`!#$%\^&*+=\-\[\]\\';,/{}|\\":<>\?]/g;
+    return pattern.test(char);
+  }
+  
 
 const Retira_caracteres = (palavra: string) => {
     let palavra_retorno: string = ''
     for (let i = 0; i < palavra.length; i++) {
-        if (palavra[i] === ' ' || palavra[i] === '-') {
+        if (palavra.charAt(i) === ' ' || palavra.charAt(i) === '-'){
             palavra_retorno += palavra[i]
         } else {
             palavra_retorno += "_"
@@ -22,7 +26,7 @@ const confere_caractere = (palavra_completa: string, palavra_incompleta: string,
 
     for (let i = 0; i < palavra_completa.length; i++) {
         if (palavra[i] === caractere.toLowerCase()) {
-            retorno[i] = palavra_completa[i]
+            retorno[i] = palavra_completa.charAt(i)
         }
     }
     return retorno.join('')
@@ -33,60 +37,88 @@ const confere_palavra = (palavra_original: string, palavra_alternativa: string) 
         return false
     }
     for (let i = 0; i < palavra_original.length; i++) {
-        if (palavra_original[i].toLowerCase() != palavra_alternativa[i].toLowerCase()) {
+        if (palavra_original.charAt(i).toLowerCase() !== palavra_alternativa.charAt(i).toLowerCase()) {
             return false
-        }
+        }        
     }
     return true
 }
 
 function sortiar_palavra() {
     const palavras: string[] = ['Teste', 'ifpi', 'Analise e Desenvolvimento de Sistemas']
-    return palavras[Math.floor(Math.random() * (palavras.length - 1))]
+    return palavras[Math.floor(Math.random() * palavras.length)]
 }
 
 let clientes: net.Socket[] = [];
+let clientCounter = 0;
 
 const server: net.Server = net.createServer((socket: net.Socket) => {
     console.log(`Cliente conectado: ${socket.remoteAddress}:${socket.remotePort}`);
-    let cliente_antigo: boolean = false;
 
+    let cliente_antigo: boolean = false;
+    let index_cli: number
     for (let i = 0; i < clientes.length; i++) {
         if (clientes[i].id == socket.id) {
-            socket.write("Cliente já conectado anteriormente\n")
-            cliente_antigo = true;
+          // Cliente já está conectado
+          socket.write("Seja Bem vindo ao jogo da forca, novamente\n");
+          cliente_antigo = true;
+          index_cli = i;
+          break
         }
     }
 
-    if (!cliente_antigo) {
-        socket.write('Olá, cliente!\n');
+    if(!cliente_antigo){
+        clientCounter++
+        socket.id = clientCounter
+        socket.write("Seja Bem vindo ao jogo da forca\n");
         clientes.push(socket);
+        index_cli = clientes.length - 1
     }
 
-    //socket.write("Digite seu nome: ");
-    socket.on('data', (data: Buffer) => {
-        // console.log(`Mensagem do cliente: ${data.toString()}`);
-        //const nome: string = data.toString();
-        socket.write(data.toString());
-        socket.write("Seja Bem vindo ao jogo da forca\n");
-        socket.write("Digite sua opção: \n");
-        socket.write("1 - Novo Jogo\n");
-        socket.write("0 - Sair\n");
-        socket.write("=> ");
-        socket.on('data', (data: Buffer) => {
+    const opcoes: string[] = ["1 - Novo Jogo\n", "0 - Sair\n\n"]
+    const exibe_op = (opcoes: string[]) => {
+        for(let op of opcoes){
+            socket.write(op)
+        }
+    }
 
-            if (data.toString() == "1") {
+    socket.write("Opções disponiveis: \n")
+    exibe_op(opcoes)
+
+    socket.on('data', (data: Buffer) => {
+        let opcao: string = data.toString()
+        while(opcao != "1" && opcao != "2"){
+            socket.write("Opção inválida, escolha uma opção dentre as abaixo: ")
+            exibe_op(opcoes)
+            socket.on('data', (op: Buffer) => {
+                opcao = op.toString()
+            });
+             
+        }
+
+        
+
+            if (opcao == "1") {
                 let palavra: string = sortiar_palavra();
                 let palavra_incompleta: string = Retira_caracteres(palavra);
                 let valor_continuidade: boolean = true;
 
-                if (valor_continuidade) {
+                while (valor_continuidade) {
 
-                    socket.write(`Palavra incompleta: \n ----> ${palavra_incompleta} <----\n`);
+                    socket.write(`Palavra incompleta:   ----> ${palavra_incompleta} <----   \n\n`);
 
                     socket.write("Digite uma letra: ");
                     socket.on('data', (data: Buffer) => {
-                        const letra: string = data.toString();
+                        let letra: string = data.toString();
+                        let caractere_esp: boolean = isSpecialCharacter(letra)
+                        while(!isNaN(Number(letra)) || letra.length > 1 || caractere_esp){
+                            socket.write("Letra inválida, insira novamente: ")
+                            socket.on('data', (entrada: Buffer) => {
+                                letra = entrada.toString()
+                                caractere_esp = isSpecialCharacter(letra)
+                            });
+
+                        }
                         palavra_incompleta = confere_caractere(palavra, palavra_incompleta, letra);
                     });
 
@@ -97,16 +129,9 @@ const server: net.Server = net.createServer((socket: net.Socket) => {
                 socket.write("Parabéns, você ganhou!\n");
 
             } else if (data.toString() == "0") {
-                socket.write("Saindo do jogo\n");
+                socket.write("Certo, saindo do jogo..\n");
                 socket.end();
-            } else {
-                socket.write("Opção inválida\n");
-                socket.write("Digite sua opção: \n");
-                socket.write("1 - Novo Jogo\n");
-                socket.write("0 - Sair\n");
-                socket.write("=> ");
             }
-        });
     });
 
 
