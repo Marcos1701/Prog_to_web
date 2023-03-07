@@ -49,6 +49,29 @@ function sortiar_palavra() {
     return palavras[Math.floor(Math.random() * palavras.length)]
 }
 
+function exibe_op(socket: net.Socket,opcoes: string[]) {
+    for(let op of opcoes){
+        socket.write(op)
+    }
+}
+
+
+function tratarEntradaUsuario(socket: net.Socket, opcoes: string[]): Promise<string> {
+    return new Promise((resolve, reject) => {
+      socket.once('data', (data: Buffer) => {
+        const opcao: string = data.toString().trim();
+        if (opcoes.includes(opcao)) {
+          resolve(opcao);
+        } else {
+          socket.write("Opção inválida, escolha uma opção dentre as abaixo: ");
+          exibe_op(socket,opcoes);
+          tratarEntradaUsuario(socket, opcoes).then(resolve).catch(reject);
+        }
+      });
+    });
+  }
+  
+
 let clientes: net.Socket[] = [];
 let clientCounter = 0;
 
@@ -76,20 +99,14 @@ const server: net.Server = net.createServer((socket: net.Socket) => {
     }
 
     const opcoes: string[] = ["1 - Novo Jogo\n", "0 - Sair\n\n"]
-    const exibe_op = (opcoes: string[]) => {
-        for(let op of opcoes){
-            socket.write(op)
-        }
-    }
-
     socket.write("Opções disponiveis: \n")
-    exibe_op(opcoes)
+    exibe_op(socket,opcoes)
 
     socket.on('data', (data: Buffer) => {
         let opcao: string = data.toString()
         while(opcao != "1" && opcao != "2"){
             socket.write("Opção inválida, escolha uma opção dentre as abaixo: ")
-            exibe_op(opcoes)
+            exibe_op(socket, opcoes)
             socket.on('data', (op: Buffer) => {
                 opcao = op.toString()
             });
