@@ -2,7 +2,7 @@ import * as fs from 'fs'
 import * as net from 'net';
 
 // function isSpecialCharacter(char) {
-//     var pattern = /[~`!#$%\^&*+=\-\[\]\\';,/{}|\\":<>\?]/g;
+//     let pattern = /[~`!#$%\^&*+=\-\[\]\\';,/{}|\\":<>\?]/g;
 //     return pattern.test(char);
 // }
 
