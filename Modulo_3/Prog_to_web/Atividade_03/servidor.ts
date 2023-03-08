@@ -257,7 +257,7 @@ async function leitor(socket: net.Socket): Promise<string> {
 }
 
 function sortiar_palavra() {
-    const palavras: string[] = fs.readFileSync('palavras.txt', 'utf-8').split('\n')
+    const palavras: string[] = fs.readFileSync('palavras_sem_acento.txt', 'utf-8').split('\n')
     let palavra_sorteada: string = palavras[Math.floor(Math.random() * palavras.length)]
     while (palavra_sorteada.length <= 3) {
         palavra_sorteada = palavras[Math.floor(Math.random() * palavras.length)]
