@@ -190,24 +190,30 @@ async function leitor(socket: net.Socket): Promise<string> {
     });
 }
 
-let jogo!: Jogo
+let jogo: Jogo
+let palavra: string;
+let palavra_incompleta: string
+let jogador_atual: Jogador
 
 async function Game_Multiplayer(socket: net.Socket): Promise<void> {
-    let palavra: string = jogo.palavra;
-    let palavra_incompleta: string = jogo.palavra_incompleta;
 
+    palavra = jogo.palavra
+    palavra_incompleta = jogo.palavra_incompleta
     socket.write("Bem vindo ao jogo da forca multiplayer\n");
     socket.write("Digite seu nome: ");
     let nome: string = await leitor(socket);
     jogo.add_jogador(nome, socket);
-    let jogador: Jogador = jogo.jogador_atual;
+    if(!jogador_atual){
+        jogador_atual = jogo.jogador_atual;
+    }
     socket.write('cls');
-    socket.write(`\nOlá ${jogador.nome}, seja bem vindo ao jogo da forca multiplayer!\n`);
+    socket.write(`\nOlá ${jogador_atual.nome}, seja bem vindo ao jogo da forca multiplayer!\n`);
     socket.write(`A palavra tem ${palavra.length} letras\n.`);
     socket.write(`A palavra é: ${palavra_incompleta}\n.`);
-    socket.write(`Digite uma letra: `);
-
+    
     while (jogo.valor_continuidade) {
+        if(jogador_atual.socket == socket){
+            socket.write(`Digite uma letra: `);
         let letra: string = await leitor(socket);
         if (jogo.letras_usadas.includes(letra)) {
             socket.write(`A letra ${letra} já foi utilizada\n.`);
@@ -224,7 +230,7 @@ async function Game_Multiplayer(socket: net.Socket): Promise<void> {
                 socket.write(`A palavra é: ${palavra_incompleta}.\n`);
                 socket.write(`Digite uma letra: `);
                 if (jogo.palavra_incompleta === palavra) {
-                    socket.write(`Parabéns ${jogador.nome}, você acertou a palavra.\n`);
+                    socket.write(`Parabéns ${jogador_atual.nome}, você acertou a palavra.\n`);
                     socket.write(`A palavra era: ${palavra}.\n`);
                     socket.write(`Placar:\n`);
                     socket.write(`${jogo.placar_jogadores()}.\n`);
@@ -249,12 +255,13 @@ async function Game_Multiplayer(socket: net.Socket): Promise<void> {
                     }
                 }
 
+
             } else {
                 socket.write(`A letra ${letra} não existe na palavra.\n`);
                 socket.write(`A palavra é: ${jogo.palavra_incompleta}.\n`);
                 jogo.prox_jogador();
-                jogador = jogo.jogador_atual;
-                socket.write(`Vez do jogador ${jogador.nome}.\n`);
+                jogador_atual = jogo.jogador_atual;
+                socket.write(`Vez do jogador ${jogador_atual.nome}.\n`);
                 socket.write(`A palavra é: ${jogo.palavra_incompleta}\n`);
                 socket.write(`Digite uma letra: `);
             }
@@ -262,6 +269,9 @@ async function Game_Multiplayer(socket: net.Socket): Promise<void> {
             socket.write(`A letra ${letra} não é válida.\n`);
             socket.write(`Digite uma letra: `);
         }
+    }else{
+        socket.write(`Aguarde a sua vez, Jogador Atual: ${jogador_atual.nome}`)
+    }
 
     }
 }
