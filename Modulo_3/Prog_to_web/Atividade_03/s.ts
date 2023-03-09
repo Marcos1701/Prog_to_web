@@ -52,9 +52,9 @@ class Jogo {
         this._jogadores = [];
         this._valor_continuidade = true;
         this._letras_usadas = [];
-        this._letras_validas = 'abcdefghijklmnopqrstuvwxyz'.split('');
         this._alfabeto = "abcdefghijklmnopqrstuvwxyz";
         this._alfabeto += this._alfabeto.toUpperCase();
+        this._letras_validas = this._alfabeto.split('');
         this._rodada = 0;
 
     }
@@ -190,15 +190,9 @@ async function leitor(socket: net.Socket): Promise<string> {
     });
 }
 
-async function pausa(Jogadores: net.Socket[]): void{
-    socket.once('data', (data: Buffer) => {
-    }
-    return;
-}
-
+let jogo!: Jogo
 
 async function Game_Multiplayer(socket: net.Socket): Promise<void> {
-    let jogo: Jogo = new Jogo();
     let palavra: string = jogo.palavra;
     let palavra_incompleta: string = jogo.palavra_incompleta;
 
@@ -272,16 +266,8 @@ async function Game_Multiplayer(socket: net.Socket): Promise<void> {
     }
 }
 
-async function leitor(socket: net.Socket): Promise<string> {
-    return new Promise((resolve, reject) => {
-        socket.once('data', (data: Buffer) => {
-            resolve(data.toString().trim());
-        })
-    })
-}
-
 function sortear_palavra() {
-    const palavras: string[] = fs.readFileSync('palavras_sem_acento.txt', 'utf-8').split(',')
+    const palavras: string[] = fs.readFileSync('palavras_sem_acento.txt', 'utf-8').split('\n')
     let palavra_sorteada: string = palavras[Math.floor(Math.random() * palavras.length)]
     while (palavra_sorteada.length <= 3) {
         palavra_sorteada = palavras[Math.floor(Math.random() * palavras.length)]
@@ -291,7 +277,10 @@ function sortear_palavra() {
 }
 
 const server = net.createServer((socket) => {
-    Game_Multiplayer(socket);
+   if(jogo == null){
+    jogo = new Jogo()
+   }
+   Game_Multiplayer(socket)
 })
 
 server.listen(3000, () => {
