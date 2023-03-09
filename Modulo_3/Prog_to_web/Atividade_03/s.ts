@@ -190,8 +190,10 @@ async function leitor(socket: net.Socket): Promise<string> {
     });
 }
 
-async function (params: type) {
-
+async function pausa(Jogadores: net.Socket[]): void{
+    socket.once('data', (data: Buffer) => {
+    }
+    return;
 }
 
 
