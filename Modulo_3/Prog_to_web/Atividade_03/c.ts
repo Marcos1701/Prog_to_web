@@ -14,16 +14,12 @@ const client: net.Socket = net.createConnection({ port: 3000 }, () => {
 
 client.on('data', (data: Buffer) => {
     try {
-        if (data.toString() == 'cls') {
-            console.clear()
-        } else if (data.toString() == 'press-enter') {
-            input('Pressione <enter> para continuar...')
-        } else {
-            console.log(data.toString());
-            rl.question('=> ', (resposta: string) => {
-                client.write(resposta);
-            });
-        }
+        
+        console.log(data.toString());
+        rl.question('=> ', (resposta: string) => {
+           client.write(resposta);
+        });
+   
     } catch (error: any) {
         console.log(`Erro: ${error.message}`);
     }
