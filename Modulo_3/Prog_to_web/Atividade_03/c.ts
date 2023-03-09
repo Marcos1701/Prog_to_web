@@ -14,11 +14,19 @@ const client: net.Socket = net.createConnection({ port: 3000 }, () => {
 
 client.on('data', (data: Buffer) => {
     try {
-        
-        console.log(data.toString());
-        rl.question('=> ', (resposta: string) => {
-           client.write(resposta);
-        });
+        console.log(data.toString())
+        //if(data.toString() == 'Digite seu nome: ' || data.toString() == 'Digite uma letra: ' || data.toString() == 'Digite 1 para jogar novamente ou 0 para sair: '){
+        //console.log(data.toString());
+        //rl.question('=> ', (resposta: string) => {
+        //   client.write(resposta);
+        //});
+        //}else if(data.toString() == 'cls'){
+        //    console.clear()
+        //    client.write('Recebi o texto')
+        //}else{
+        //    console.log(data.toString())
+        //    client.write('Recebi o texto')
+        //}
    
     } catch (error: any) {
         console.log(`Erro: ${error.message}`);
