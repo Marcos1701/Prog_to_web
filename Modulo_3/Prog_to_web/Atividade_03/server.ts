@@ -1,11 +1,6 @@
 import * as fs from 'fs'
 import * as net from 'net';
 
-// function isSpecialCharacter(char) {
-//     let pattern = /[~`!#$%\^&*+=\-\[\]\\';,/{}|\\":<>\?]/g;
-//     return pattern.test(char);
-// }
-
 class Jogador {
     private _id: string;
     private _nome: string;
@@ -52,16 +47,15 @@ class Jogo {
     private _rodada: number;
 
     constructor() {
-        this._palavra = sortiar_palavra();
+        this._palavra = sortear_palavra();
         this._palavra_incompleta = this.Retira_caracteres(this._palavra);
         this._jogadores = [];
         this._valor_continuidade = true;
         this._letras_usadas = [];
-        this._letras_validas = 'abcdefghijklmnopqrstuvwxyz'.split('');
         this._alfabeto = "abcdefghijklmnopqrstuvwxyz";
         this._alfabeto += this._alfabeto.toUpperCase();
+        this._letras_validas = this._alfabeto.split('');
         this._rodada = 0;
-
     }
 
     add_jogador(nome: string, socket: net.Socket): void {
@@ -73,7 +67,7 @@ class Jogo {
         let palavra_retorno: string = ''
         for (let i = 0; i < palavra.length; i++) {
             if (palavra.charAt(i) === ' ' || palavra.charAt(i) === '-') {
-                palavra_retorno += palavra[i]
+                palavra_retorno += palavra.charAt(i)
             } else {
                 palavra_retorno += "_"
             }
@@ -94,10 +88,10 @@ class Jogo {
     }
 
     get jogador_atual(): Jogador {
-        if(this._jogadores.length == 0){
-            throw new Error("Nãletras_usadaso há jogadores cadastrados")
+        if (this._jogadores.length == 0) {
+            throw new Error("Ops, Não há jogadores cadastrados")
         }
-        if(this.id_jogador_atual >= this._jogadores.length){
+        if (this.id_jogador_atual >= this._jogadores.length) {
             this.id_jogador_atual = 0;
         }
         return this._jogadores[this.id_jogador_atual];
@@ -131,16 +125,16 @@ class Jogo {
         this._palavra_incompleta = palavra_incompleta;
     }
 
-    public atualizarPalavraIncompleta(letra: string) {
+    atualizar_palavra_incompleta(letra: string) {
         let novaPalavraIncompleta: string = "";
         for (let i = 0; i < this.palavra.length; i++) {
-            if (this.palavra[i] === letra) {
+            if (this.palavra.charAt(i) === letra) {
                 novaPalavraIncompleta += letra;
             } else {
-                novaPalavraIncompleta += this.palavra_incompleta[i];
+                novaPalavraIncompleta += this.palavra_incompleta.charAt(i);
             }
         }
-        this.palavra_incompleta = novaPalavraIncompleta.trim();
+        this.palavra_incompleta = novaPalavraIncompleta;
     }
 
     prox_jogador() {
@@ -154,14 +148,14 @@ class Jogo {
         this._valor_continuidade = valor_continuidade;
     }
 
-    confere_caractere(palavra_completa: string, palavra_incompleta: string, caractere: string) {
-        let retorno: string[] = palavra_incompleta.split('')
-        const palavra: string = palavra_completa.toLowerCase()
+    confere_caractere(caractere: string) {
+        let retorno: string[] = this.palavra_incompleta.split('')
+        const palavra: string = this.palavra.toLowerCase()
         let qtd: number = 0;
 
-        for (let i = 0; i < palavra_completa.length; i++) {
+        for (let i = 0; i < palavra.length; i++) {
             if (palavra[i] === caractere.toLowerCase()) {
-                retorno[i] = palavra_completa.charAt(i)
+                retorno[i] = palavra.charAt(i)
                 qtd++
             }
         }
@@ -184,91 +178,121 @@ class Jogo {
         return retorno;
     }
 
-
-}
-
-
-async function Game_Multiplayer(socket: net.Socket): Promise<void> {
-    let jogo: Jogo = new Jogo();
-    let palavra: string = jogo.palavra;
-    let palavra_incompleta: string = jogo.palavra_incompleta;
-
-    socket.write("Bem vindo ao jogo da forca multiplayer\n");
-    socket.write("Digite seu nome: ");
-    let nome: string = await leitor(socket);
-    jogo.add_jogador(nome, socket);
-    let jogador: Jogador = jogo.jogador_atual;
-    socket.write(`Olá ${jogador.nome}, seja bem vindo ao jogo da forca multiplayer\n`);
-    socket.write(`A palavra tem ${palavra.length} letras\n`);
-    socket.write(`A palavra é: ${palavra_incompleta}\n`);
-    socket.write(`Digite uma letra: `);
-
-    while (jogo.valor_continuidade) {
-        let letra: string = await leitor(socket);
-        if (jogo.letras_usadas.includes(letra)) {
-            socket.write(`A letra ${letra} já foi utilizada\n`);
-            socket.write(`Digite uma letra: `);
-            continue;
+    Msg_to_players(msg: string): void{
+        for(let player of this._jogadores){
+            player.socket.write(msg)
         }
-        if (jogo.letras_validas.includes(letra)) {
-            let qtd: number = jogo.confere_caractere(palavra, palavra_incompleta, letra);
-            if (qtd > 0) {
-                socket.write(`A letra ${letra} existe na palavra\n`);
-                jogo.nova_letra_utilizada(letra)
-                jogo.atualizarPalavraIncompleta(letra);
-                palavra_incompleta = jogo.palavra_incompleta;
-                socket.write(`A palavra é: ${palavra_incompleta}\n`);
-                socket.write(`Digite uma letra: `);
-                if (jogo.palavra_incompleta === palavra) {
-                    socket.write(`Parabéns ${jogador.nome}, você acertou a palavra\n`);
-                    socket.write(`A palavra era: ${palavra}\n`);
-                    socket.write(`Placar:\n`);
-                    socket.write(`${jogo.placar_jogadores()}\n`);
-                    socket.write(`Digite 1 para jogar novamente ou 0 para sair: `);
-                    let opcao: string = await leitor(socket);
-                    if (opcao === '1') {
-                        jogo = new Jogo();
-                        palavra = jogo.palavra;
-                        palavra_incompleta = jogo.palavra_incompleta;
-                        socket.write(`A palavra tem ${palavra.length} letras\n`);
-                        socket.write(`A palavra é: ${palavra_incompleta}\n`);
-                        socket.write(`Digite uma letra: `);
-                        continue;
-                    } else {
-                        socket.write(`Obrigado por jogar\n`);
-                        socket.end();
-                        break;
-                    }
+    }
 
-                }
-
-            } else {
-                socket.write(`A letra ${letra} não existe na palavra\n`);
-                socket.write(`A palavra é: ${jogo.palavra_incompleta}\n`);
-                jogo.prox_jogador();
-                jogador = jogo.jogador_atual;
-                socket.write(`Vez do jogador ${jogador.nome}\n`);
-                socket.write(`A palavra é: ${jogo.palavra_incompleta}\n`);
-                socket.write(`Digite uma letra: `);
-            }
-        } else {
-            socket.write(`A letra ${letra} não é válida\n`);
-            socket.write(`Digite uma letra: `);
+    Fim_de_jogo(): void{
+        for(let player of this._jogadores){
+            player.socket.write(`Obrigado por jogar!\n`);
+            player.socket.end()
         }
-
     }
 }
-
 
 async function leitor(socket: net.Socket): Promise<string> {
     return new Promise((resolve, reject) => {
         socket.once('data', (data: Buffer) => {
             resolve(data.toString().trim());
-        })
-    })
+        });
+    });
 }
 
-function sortiar_palavra() {
+let jogo: Jogo
+
+
+async function Game_Multiplayer(socket: net.Socket): Promise<void> {
+
+    
+    socket.write("Bem vindo ao jogo da forca multiplayer\n");
+    socket.write("Digite seu nome:");
+    let nome: string = await leitor(socket);
+    jogo.add_jogador(nome, socket);
+
+    socket.write('c');
+    socket.write(`\nOlá ${jogo.jogador_atual.nome}, seja bem vindo ao jogo da forca multiplayer!\n`);
+    socket.write(`A palavra tem ${jogo.palavra.length} letras\n.`);
+    socket.write(`A palavra é: ${jogo.palavra_incompleta}\n.`);
+    
+    while (jogo.valor_continuidade) {
+        try{
+            if(jogo.jogador_atual.socket == socket){
+               socket.write(`---> Digite uma letra:`);
+               let letra: string = await leitor(socket);
+               if (jogo.letras_usadas.includes(letra)) {
+                   socket.write(`--->  A letra ${letra} já foi utilizada. <---\n`);
+                   //socket.write(`---> Digite uma letra:`);
+                   continue;
+                }
+               if (jogo.letras_validas.includes(letra)) {
+                    let qtd: number = jogo.confere_caractere(letra);
+                    if (qtd > 0) {
+                        socket.write('c')
+                        socket.write(`---> A letra ${letra} existe na palavra.  <---\n`);
+                        jogo.nova_letra_utilizada(letra)
+                        jogo.atualizar_palavra_incompleta(letra);
+                        socket.write(`---> A palavra é: ${jogo.palavra_incompleta}. <---\n\n`);
+                        jogo.prox_jogador();
+                        //socket.write(`---> Digite uma letra:`);
+
+                        if (jogo.palavra_incompleta === jogo.palavra) {
+                           jogo.Msg_to_players(` <---> Parabéns ${jogo.jogador_atual.nome}, você acertou a palavra.  <---> \n`);
+                           jogo.Msg_to_players(`A palavra era: --->  ${jogo.palavra}.    <---\n`);
+                           jogo.Msg_to_players(`\nPlacar:\n`);
+                           jogo.Msg_to_players(`${jogo.placar_jogadores()}.\n`);
+    
+                            //socket.write(`Digite 1 para jogar novamente ou 0 para sair: `);
+                            //let opcao: string = await leitor(socket);
+                            //if (opcao === '1') {
+                            //jogo = new Jogo();
+                            //    jogo.add_jogador(nome, socket);
+                            //    let jogador: Jogador = jogo.jogador_atual;
+                            //    socket.write(`\nOlá ${jogador.nome}, seja bem vindo ao jogo da forca multiplayer!\n`);
+                            //    socket.write(`A palavra tem ${jogo.palavra.length} letras.\n`);
+                            //    socket.write(`A palavra é: ${jogo.palavra_incompleta}.\n`);
+                            //    socket.write(`Digite uma letra: `);
+                            //    continue;
+                            //} else {
+                            
+                            socket.end();
+                            break;
+                            //}
+                        }
+    
+                    } else {
+                        socket.write('c')
+                        socket.write(`---> Ops.., a letra ${letra} não existe na palavra.  <---\n`);
+                        socket.write(`--->  A palavra é: ${jogo.palavra_incompleta}.  <---\n`);
+                        jogo.prox_jogador();
+                        socket.write(`---> Vez do jogador ${jogo.jogador_atual.nome}.  <---\n`);
+                        socket.write(`---> A palavra é: ${jogo.palavra_incompleta}  <---\n`);
+                        //socket.write(`---> Digite uma letra:`);
+                    }
+                } else {
+                    socket.write('c')
+                    socket.write(`---> A letra ${letra} não é válida. <---\n`);
+                    //socket.write(`--> Digite uma letra:`);
+                }
+            }else {
+                socket.write(`Aguarde a sua vez, Jogador Atual: ${jogo.jogador_atual.nome}\n`);
+           
+                while (jogo.jogador_atual.socket !== socket) {
+                await new Promise((resolve) => setTimeout(resolve, 1000));
+            }
+
+            socket.write(`Sua vez, ${jogo.jogador_atual.nome}!\n`);
+            socket.write(`A palavra é: ${jogo.palavra_incompleta}.\n`);
+            //socket.write(`Digite uma letra:`);
+        }
+    }catch(e: any){
+        console.log(`Erro: ${e.message}`)
+    }   
+    }
+}
+
+function sortear_palavra() {
     const palavras: string[] = fs.readFileSync('palavras_sem_acento.txt', 'utf-8').split(',')
     let palavra_sorteada: string = palavras[Math.floor(Math.random() * palavras.length)]
     while (palavra_sorteada.length <= 3) {
@@ -278,14 +302,13 @@ function sortiar_palavra() {
     return palavra_sorteada
 }
 
-
 const server = net.createServer((socket) => {
-    Game_Multiplayer(socket);
+   if(jogo == null){
+    jogo = new Jogo()
+   }
+   Game_Multiplayer(socket)
 })
 
-
-
-
 server.listen(3000, () => {
-    console.log("Servidor rodando na porta 3000");
+    console.log("Servidor rodando na porta 3000.");
 })

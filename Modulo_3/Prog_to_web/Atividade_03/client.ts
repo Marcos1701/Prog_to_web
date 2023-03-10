@@ -12,10 +12,21 @@ const client: net.Socket = net.createConnection({ port: 3000 }, () => {
 
 client.on('data', (data: Buffer) => {
   try {
-    console.log(data.toString());
-    rl.question('=> ', (resposta: string) => {
-      client.write(resposta);
-    });
+      if(data.toString().charAt(data.toString().length - 1) == ':'){
+        console.log(data.toString());
+        rl.question('=> ', (resposta: string) => {
+        client.write(resposta);
+        });
+    }else if(data.toString().charAt(0) == 'c'){
+        console.clear()
+    }else{
+        console.log(data.toString());
+    }
+    //else if(data.toString() == "c"){
+      //  console.clear()
+    //}else{
+      //  client.write('')
+    //}
   } catch (error: any) {
     console.log(`Erro: ${error.message}`);
   }
