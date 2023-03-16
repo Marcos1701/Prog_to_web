@@ -2,8 +2,8 @@ import * as net from 'net';
 import readline from 'readline';
 
 const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout
+    input: process.stdin,
+    output: process.stdout
 });
 
 const client: net.Socket = net.createConnection({ port: 3000 }, () => {
@@ -12,59 +12,27 @@ const client: net.Socket = net.createConnection({ port: 3000 }, () => {
 });
 
 client.on('data', (data: Buffer) => {
-  try {
-      if(data.toString().charAt(data.toString().length - 1) == ':'){
-        console.log(data.toString());
-        rl.question('=> ', (resposta: string) => {
-        client.write(resposta);
-        });
-    }else if(data.toString().charAt(0) == 'c'){
-        console.clear()
-    }else{
-        console.log(data.toString());
+    try {
+        if (data.toString().charAt(data.toString().length - 1) === ':') {
+            console.log(data.toString());
+            rl.question('=> ', (resposta: string) => {
+                client.write(resposta);
+            });
+        } else if (data.toString().charAt(0) === 'c') {
+            console.clear()
+        } else {
+            console.log(data.toString());
+        }
+    } catch (error: any) {
+        console.log(`Erro: ${error.message}`);
     }
-  } catch (error: any) {
-    console.log(`Erro: ${error.message}`);
-  }
 });
 
 client.on('error', (error: Error) => {
-  console.log(`Erro: ${error.message}`);
-});
-
-client.on('end', () => {
-  console.log('Desconectado do servidor');
-});
-
-
-/* 
-import * as net from 'net';
-import readline from 'readline';
-
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout
-});
-
-const client: net.Socket = net.createConnection({ port: 3000 }, () => {
-  console.log('Conectado ao servidor');
-});
-
-client.on('data', (data: Buffer) => {
-  try {
-    console.log(data.toString());
-    rl.question('=> ', (resposta: string) => {
-      client.write(resposta);
-    });
-  } catch (error: any) {
     console.log(`Erro: ${error.message}`);
-  }
-});
-
-client.on('error', (error: Error) => {
-  console.log(`Erro: ${error.message}`);
 });
 
 client.on('end', () => {
-  console.log('Desconectado do servidor');
-}); */
+    console.log('Desconectado do servidor');
+});
+
