@@ -4,9 +4,21 @@ from utilitarios import confere_link, search, set_ranks, exibir_dados_obtidos
 
 class Historico:
     def __init__(self, url: str, palavra: str, prof_busca: int):
-        self.url = url
-        self.palavra = palavra
-        self.prof_busca = prof_busca
+        self._url = url
+        self._palavra = palavra
+        self._prof_busca = prof_busca
+
+    @property
+    def url(self):
+        return self._url
+
+    @property
+    def palavra(self):
+        return self._palavra
+
+    @property
+    def prof_busca(self):
+        return self._prof_busca
 
 
 def confere_op(opcao: int, max: int, min: int):
@@ -21,7 +33,7 @@ def exibe_opcoes(opcoes: list):
         print(opcao)
 
 
-def exibir_Historicos(Historico_buscas: list):
+def exibir_Historicos(Historico_buscas=[]):
     print("- - - - - - - - - - - - - Histórico de Buscas - - - - - - - - - - - - -\n")
     if len(Historico_buscas) == 0:
         print("Nenhum histórico de busca encontrado.")
@@ -29,11 +41,12 @@ def exibir_Historicos(Historico_buscas: list):
 
     i = 1
     for historico in Historico_buscas:
-        if isinstance(Historico_buscas, Historico):
+        if isinstance(historico, Historico):
             print(f"Busca n°{i}")
             print(f"Url: {historico.url}")
             print(f"Palavra: {historico.palavra}")
             print(f"Profundidade da Busca: {historico.prof_busca}")
+            i += 1
 
 
 def App():
@@ -48,7 +61,7 @@ def App():
 
     while opcao != 0:
         try:
-            while not confere_op(opcao, 1, 0):
+            while not confere_op(opcao, 2, 0):
                 print("Ops, opção inválida, digite novamente: ")
                 opcao = int(input("=> "))
 
@@ -69,13 +82,17 @@ def App():
                         "Ops, a profundidade da busca deve ser um número inteiro, digite novamente: ")
                     prof_busca = int(input("=> "))
 
+                Historico_buscas.append(Historico(url, palavra, prof_busca))
                 [retorno, links] = search(url, palavra, prof_busca)
                 retorno = set_ranks(retorno, links)
-
                 exibir_dados_obtidos(retorno)
-                Historico_buscas.append(Historico(url, palavra, prof_busca))
             elif opcao == 2:
                 exibir_Historicos(Historico_buscas)
+
+            if opcao != 0:
+                input("\n\nPressione qualquer tecla para sair...")
+                exibe_opcoes(opcoes_menu)
+                opcao = int(input("=> "))
 
         except Exception as e:
             print("Ops, ocorreu um erro, tente novamente.")
