@@ -49,13 +49,12 @@ class Armazena_links:
 
 
 class Url:
-    def __init__(self, url: str, nivel: int):
+    def __init__(self, url: str):
         self._url = url
         self.links = []
         self._ocorrencias = ocorrencia(url)
         self.rank = 0
         self.referencias = 0
-        self.nivel = nivel
 
     @property
     def url(self):
@@ -140,9 +139,7 @@ def buscar_ocorrencias(url, palavra: str):
         pagina = requests.get(url)
         ocorrencias = ocorrencia(url)
         texto = BeautifulSoup(pagina.text, 'html.parser')
-        # padrao = re.compile(r'\b{}\b'.format(palavra))
-        # trechos = texto.find_all(string=padrao)
-        print(f"Obtendo as ocorrencias de {palavra} na pagina {url}..\n")
+        print(f"Obtendo as ocorrencias de {palavra} na pagina '{url}'..\n")
         trechos = texto.find_all(string=lambda text: palavra in text)
     except Exception as e:
         print("Ocorreu um erro ao buscar o texto presente no body da pagina, url: ", url)
@@ -166,9 +163,9 @@ def search(url_inicio: str, palavra: str, prof_busca: int):
         dados = []
 
         print("Buscando por: ", palavra)
-        dados.append(Url(url=url_inicio, nivel=1))
+        dados.append(Url(url_inicio))
         links.add_novo_link(url_inicio)
-        [dados, links] = get_links(links, palavra, dados, prof_busca)
+        [dados, links] = get_links(links, palavra, dados, prof_busca - 1)
 
         return [dados, links]
     except Exception as e:
@@ -193,31 +190,32 @@ def add_ref(links: Armazena_links, results: List[Url]):
 
 # Recebe uma lista de Urls, uma palavra-chave e uma profundidade de busca e
 # retorna uma lista com as Urls analisadas.
-def get_links(links: Armazena_links, palavra: str, dados, prof_busca: int, nivel_atual=1):
+def get_links(links: Armazena_links, palavra: str, dados, prof_busca: int):
     try:
         links_novos = []
         for url in links._novos_links:
             if not links.conferir_link(url):
-                # continue
-                # print(nivel_atual)
-
                 pagina = requests.get(url)
                 soup = BeautifulSoup(pagina.text, 'html.parser')
                 tags_a = soup.find_all('a')
                 for a in tags_a:
                     link = a.get('href')
-                    print(link)
                     if not link or link is None:
                         continue
                     novo_link = ''
 
-                    if link.startswith('/'):
-                        # novo_link = Url((dados[0].url[:len(dados[0].url) - 1] + link).rstrip('/'))
-                        novo_link = Url(
-                            dados[0].url[:len(dados[0].url) - 1] + link, nivel=nivel_atual)
+                    if link[0] == '/':
+                        if link.startswith('//'):
+                            novo_link = Url(f"http:{link}")
+                        elif dados[0].url.endswith('/'):
+                            novo_link = Url(
+                                f"{dados[0].url}{link[1:]}")
+                        else:
+                            novo_link = Url(
+                                f"{dados[0].url}{link}")
                         links_novos.append(novo_link)
                     elif link.startswith(dados[0].url):
-                        novo_link = Url(link, nivel=nivel_atual)
+                        novo_link = Url(link)
                         links_novos.append(novo_link)
                     else:
                         continue
@@ -231,10 +229,10 @@ def get_links(links: Armazena_links, palavra: str, dados, prof_busca: int, nivel
 
         retorno = [dados, links]
 
-        if len(links_novos) > 0 and prof_busca > 0:
-            n = nivel_atual + 1
+        if len(links._novos_links) > 0 and prof_busca > 0:
+            # print('chegou aqui..')
             aux = get_links(links, palavra, dados,
-                            prof_busca - 1, nivel_atual=n)
+                            prof_busca - 1)
             retorno[0].append(aux[0])
             retorno[1] = aux[1]
 
@@ -252,7 +250,6 @@ def exibir_dados_obtidos(Dados_resultantes: List[Url]):
             for i in range(len(Dados_resultantes) - 1):
                 if Dados_resultantes[i] is not None and isinstance(Dados_resultantes[i], Url) and Dados_resultantes[i].qtd > 0:
                     print(f"URL: {Dados_resultantes[i].url}")
-                    print(f"Nivel: {Dados_resultantes[i].nivel}\n")
                     x = 1
                     print("Ocorrencias: \n")
                     for ocorrencia in Dados_resultantes[i].ocorrencias:
