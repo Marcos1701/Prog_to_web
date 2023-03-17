@@ -82,8 +82,8 @@ def App():
                         "Ops, a profundidade da busca deve ser um número inteiro, digite novamente: ")
                     prof_busca = int(input("=> "))
 
-                Historico_buscas.append(Historico(url, palavra, prof_busca))
                 [retorno, links] = search(url, palavra, prof_busca)
+                Historico_buscas.append(Historico(url, palavra, prof_busca))
                 retorno = set_ranks(retorno, links)
                 exibir_dados_obtidos(retorno)
             elif opcao == 2:
