@@ -1,7 +1,6 @@
 import requests
 import requests_cache
 from bs4 import BeautifulSoup
-# import re
 from typing import List
 
 requests_cache.install_cache('banco')
@@ -165,7 +164,7 @@ def search(url_inicio: str, palavra: str, prof_busca: int):
         print("Buscando por: ", palavra)
         dados.append(Url(url_inicio))
         links.add_novo_link(url_inicio)
-        [dados, links] = get_links(links, palavra, dados, prof_busca - 1)
+        [dados, links] = get_links(links, palavra, dados, prof_busca)
 
         return [dados, links]
     except Exception as e:
@@ -224,8 +223,8 @@ def get_links(links: Armazena_links, palavra: str, dados, prof_busca: int):
                     novo_link.ocorrencias = ocorrencias
                     dados.append(novo_link)
 
-        links.add_novos_links(links_novos)
         links.reseta_novos_links()
+        links.add_novos_links(links_novos)
 
         retorno = [dados, links]
 
