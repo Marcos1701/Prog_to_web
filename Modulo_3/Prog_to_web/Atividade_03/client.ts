@@ -35,4 +35,3 @@ client.on('error', (error: Error) => {
 client.on('end', () => {
     console.log('Desconectado do servidor');
 });
-
