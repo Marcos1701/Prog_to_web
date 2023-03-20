@@ -1,4 +1,4 @@
-import * as fs from 'fs'
+import * as fs from 'fs';
 import * as net from 'net';
 
 class Sem_Jogadores_Error extends Error {
@@ -8,19 +8,21 @@ class Sem_Jogadores_Error extends Error {
 }
 
 class Jogador {
-    private _id: string;
+    private _login: string;
+    private _senha: string
     private _nome: string;
     private _socket: net.Socket;
     private _pontos: number;
-    constructor(id: string, nome: string, socket: net.Socket) {
-        this._id = id;
+    constructor(login: string, senha: string, nome: string, socket: net.Socket) {
+        this._login = login;
+        this._senha = senha
         this._nome = nome;
         this._socket = socket
         this._pontos = 0;
     }
 
     get id(): string {
-        return this._id;
+        return this._login;
     }
 
     get nome(): string {
@@ -29,6 +31,10 @@ class Jogador {
 
     get socket(): net.Socket {
         return this._socket;
+    }
+
+    set socket(novo_socket: net.Socket){
+        this._socket = novo_socket
     }
 
     get pontos(): number {
@@ -197,6 +203,15 @@ class Jogo {
         }
     }
 
+    Msg_to_players_wait(msg: string): void {
+        for (let player of this._jogadores) {
+            if(player.socket == this.jogador_atual.socket){
+                continue
+            }
+            enviar_msg(player.socket, msg)
+        }
+    }
+
     Fim_de_jogo(): void {
         for (let player of this._jogadores) {
             enviar_msg(player.socket, `Obrigado por jogar!\n`);
@@ -211,6 +226,21 @@ class Jogo {
     }
 }
 
+class Historico_P{
+    private _Placares: string[] = []
+
+    push(Placar: string): void{
+        this._Placares.push(Placar)
+    }
+
+    Exibir(socket: net.Socket): void{
+        let i: number = 0
+        for(let Placar of this._Placares){
+            enviar_msg(socket, `${i}°Partida\n${Placar}`)
+        }
+    }
+}
+
 async function leitor(socket: net.Socket): Promise<string> {
     return new Promise((resolve, reject) => {
         socket.once('data', (data: Buffer) => {
@@ -221,7 +251,6 @@ async function leitor(socket: net.Socket): Promise<string> {
 
 let jogo: Jogo
 
-
 async function Game_Multiplayer(socket: net.Socket): Promise<void> {
 
     try {
@@ -231,7 +260,6 @@ async function Game_Multiplayer(socket: net.Socket): Promise<void> {
         let nome: string = await leitor(socket);
         jogo.add_jogador(nome, socket);
 
-        //enviar_msg(socket, 'c');
         enviar_msg(socket, `\n\nOlá ${nome}, seja bem vindo ao jogo da forca multiplayer!\n`);
         enviar_msg(socket, `A palavra tem ${jogo.palavra.length} letras.\n`);
         enviar_msg(socket, `A palavra é: ${jogo.palavra_incompleta.split('').join(' ')}.\n`);
@@ -242,24 +270,31 @@ async function Game_Multiplayer(socket: net.Socket): Promise<void> {
                     enviar_msg(socket, `\n---> Digite uma letra:`);
                     let letra: string = await leitor(socket);
                     if (jogo.letras_usadas.includes(letra)) {
-                        //enviar_msg(socket, 'c');
                         enviar_msg(socket, `\n--->  A letra ${letra} já foi utilizada. <---\n`);
                         enviar_msg(socket, 'Tente novamente...\n')
                         continue;
                     } else if (jogo.letras_validas.includes(letra)) {
                         let qtd: number = jogo.confere_caractere(letra);
                         if (qtd > 0) {
-                            //enviar_msg(socket, 'c');
                             enviar_msg(socket, `\n---> A letra ${letra} existe na palavra.  <---\n`);
                             jogo.nova_letra_utilizada(letra)
                             jogo.atualizar_palavra_incompleta(letra);
+                            if (jogo.confere_palavra()) {
+
+                                jogo.Msg_to_players(`\n\n <---> Parabéns ${jogo.jogador_atual.nome}, você acertou a palavra.  <---> \n`);
+                                jogo.Msg_to_players(`A palavra era: --->  ${jogo.palavra}.    <---\n`);
+                                jogo.Msg_to_players(`\n\nPlacar:\n`);
+                                jogo.Msg_to_players(`${jogo.placar_jogadores()}.\n`);
+            
+                                jogo.Fim_de_jogo()
+                                break;
+                            }
                             enviar_msg(socket, `\n---> A palavra é: ${jogo.palavra_incompleta.split('').join(' ')}. <---\n\n`);
                             jogo.prox_jogador();
 
                         } else {
 
-                            //enviar_msg(socket, 'c');
-                            enviar_msg(socket, `\n\n---> Ops.., a letra ${letra} não existe na palavra.  <---\n`);
+                            enviar_msg(socket, `\n\n---> Ops... a letra ${letra} não existe na palavra.  <---\n`);
                             jogo.prox_jogador();
                             enviar_msg(socket, `\n---> Vez do jogador ${jogo.jogador_atual.nome}.  <---\n`);
                             enviar_msg(socket, `--->  A palavra é: ${jogo.palavra_incompleta.split('').join(' ')}.  <---\n`);
@@ -268,25 +303,14 @@ async function Game_Multiplayer(socket: net.Socket): Promise<void> {
                         enviar_msg(socket, `\n---> A letra ${letra} não é válida. <---\n`);
                     }
                 } else {
-                    enviar_msg(socket, `Aguarde a sua vez, Jogador Atual: ${jogo.jogador_atual.nome}\n`);
-
+                    
                     while (jogo.jogador_atual.socket !== socket) {
                         await new Promise((resolve) => setTimeout(resolve, 1000));
                     }
-                    //jogo.Msg_to_players('c')
+                    jogo.Msg_to_players('c')
+                    jogo.Msg_to_players_wait(`Aguarde a sua vez. Jogador Atual: ${jogo.jogador_atual.nome}\n`)
                     enviar_msg(jogo.jogador_atual.socket, `\n\nSua vez, ${jogo.jogador_atual.nome}!\n`);
-                    enviar_msg(jogo.jogador_atual.socket, `\nA palavra é: ${jogo.palavra_incompleta.split('').join(' ')}.\n`);
-                }
-
-                if (jogo.confere_palavra()) {
-
-                    jogo.Msg_to_players(`\n\n <---> Parabéns ${jogo.jogador_atual.nome}, você acertou a palavra.  <---> \n`);
-                    jogo.Msg_to_players(`A palavra era: --->  ${jogo.palavra}.    <---\n`);
-                    jogo.Msg_to_players(`\n\nPlacar:\n`);
-                    jogo.Msg_to_players(`${jogo.placar_jogadores()}.\n`);
-
-                    jogo.Fim_de_jogo()
-                    break;
+                    jogo.Msg_to_players(`\nA palavra é: ${jogo.palavra_incompleta.split('').join(' ')}.\n`)
                 }
 
             } catch (e: any) {
@@ -313,7 +337,6 @@ async function Game_Multiplayer(socket: net.Socket): Promise<void> {
         jogo = new Jogo()
     }
 }
-
 
 function enviar_msg(socket: net.Socket, msg: string): void {
     try {
@@ -343,7 +366,28 @@ function sortear_palavra() {
 
 }
 
-const server = net.createServer((socket: net.Socket) => {
+
+async function coletar_op_menu_Inicial(socket: net.Socket): Promise<number>{
+    const opcoes: string[] = ['1 - Realizar Login\n', '2 - Novo Jogador\n', '3 - Exibir Histórico de Partidas\n', '\n 0 - Sair']
+    const exibir_op = (opcoes: string[]) => {
+        for(let op of opcoes){
+            enviar_msg(socket, op)
+        }
+    }
+
+    let opcao: number = Number(await leitor(socket))
+
+    
+
+    while(isNaN(Number(opcao)) || Number(opcao) < 0 || Number(opcao) >= opcoes.length){
+        enviar_msg(socket, 'Opção inválida!!!')
+        enviar_msg(socket, 'As opções válidas são: ')
+        opcao = Number(await leitor(socket))
+    }
+    return opcao
+}
+
+async function iniciar_game(socket: net.Socket) {
     try {
         if (jogo == null) {
             jogo = new Jogo()
@@ -354,6 +398,30 @@ const server = net.createServer((socket: net.Socket) => {
         server.close(() => {
             console.log('Servidor encerrado.');
         });
+    }
+}
+
+const Historico_Partidas: Historico_P = new Historico_P()
+
+const server = net.createServer(async (socket: net.Socket) => {
+    enviar_msg(socket, `Olá, Seja Bem vindo ao jogo de adivinhação\n`)
+    enviar_msg(socket, `Selecione uma opção:\n\n`)
+
+    let op: number = await coletar_op_menu_Inicial(socket)
+
+    while(op != 0){
+        if(op == 1){ // realizar login
+
+        }else if(op == 2){ // Criar novo Jogador
+
+        }else if(op == 3){ // Exibir Histórico
+            Historico_Partidas.Exibir(socket)
+        }
+
+        if(op != 0){
+            enviar_msg(socket, 'Certo, agora selecione outra opção:\n\n')
+            op = await coletar_op_menu_Inicial(socket)
+        }
     }
 })
 
