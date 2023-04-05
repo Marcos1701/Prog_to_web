@@ -1,0 +1,14 @@
+body {
+    font-family: Arial;
+    background-color: rgb(128, 0, 0);
+    background-image: linear-gradient(to left, rgba(13, 240, 115, 0.71), rgba(231, 21, 199, 0.681), rgba(9, 247, 239, 0.778));
+    text-align: center;
+}
+
+body h1 {
+    color: rgb(249, 248, 248);
+}
+
+body h2 {
+    color: rgb(1, 38, 1);
+}
