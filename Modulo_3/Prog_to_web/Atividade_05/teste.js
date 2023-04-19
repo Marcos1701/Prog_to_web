@@ -3,9 +3,9 @@ const botao_alt = document.getElementById("botao_altera_txt");
 
 const botao_exc = document.getElementById("botao_exclui_txt");
 
-let botao_cancel;
+let botao_cancel = document.getElementById("botao_calcela_exc_txt");
 
-let txt_antigo = "";
+let txt_antigo = [];
 
 // adicione um evento de clique ao botão
 botao_alt.addEventListener("click", function() {
@@ -20,24 +20,26 @@ botao_exc.addEventListener("click", function(){
     const paragrafo = document.getElementById("paragrafo");
 
     if(paragrafo.textContent){
-        txt_antigo = paragrafo.textContent;
+        txt_antigo.push(paragrafo.textContent);
     }
 
     paragrafo.textContent = "";
 
-    botao_cancel = document.createElement("button")
-    botao_cancel.appendChild("cancelar exclusão")
+    if(!document.getElementById("botao_calcela_exc_txt")){
+        botao_cancel = document.createElement("button")
+        botao_cancel.appendChild(document.createTextNode("cancelar exclusão"))
 
-    botao_cancel.setAttribute("id", "botao_calcela_exc_txt")
-    document.getElementById("aux").appendChild(botao_cancel)
+        botao_cancel.setAttribute("id", "botao_calcela_exc_txt")
+        document.body.appendChild(botao_cancel)
+    }
 })
 
 if(botao_cancel){
     botao_cancel.addEventListener("click", function(){
         const paragrafo = document.getElementById("paragrafo");
 
-        paragrafo.textContent = txt_antigo;
+        paragrafo.textContent = txt_antigo.pop();
 
-        document.getElementById("aux").removeChild(botao_cancel)
+        document.body.removeChild(botao_cancel)
     })
 }
