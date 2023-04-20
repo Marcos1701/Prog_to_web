@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Document</title>
+
+</head>
+
+<body>
+    <style>
+        body {
+            background-color: #000;
+            /* cor de fundo padrão */
+            color: #ffffff;
+            /* cor do texto padrão */
+        }
+    </style>
+    <button id="fundo_p">Trocar cor Fundo para preto</button>
+    <button id="fundo_b">Trocar cor Fundo para branco</button>
+    <button id="texto_p">Trocar cor texto para preto</button>
+    <button id="texto_b">Trocar cor texto para brando</button>
+    <p>Teste</p>
+
+    <script>
+        const fundo_p = document.getElementById("fundo_p");
+        const fundo_b = document.getElementById("fundo_b");
+        const texto_p = document.getElementById("texto_p");
+        const texto_b = document.getElementById("texto_b");
+
+        fundo_p.addEventListener("click", function () {
+            document.body.style.backgroundColor = '#000000';
+        });
+        fundo_b.addEventListener("click", function () {
+            document.body.style.backgroundColor = '#ffffff';
+        });
+        texto_p.addEventListener("click", function () {
+            document.body.style.color = '#000000';
+        });
+        texto_b.addEventListener("click", function () {
+            document.body.style.color = '#ffffff';
+        });
+    </script>
+</body>
+
+</html>
