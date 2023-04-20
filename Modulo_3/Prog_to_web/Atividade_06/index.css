@@ -9,7 +9,8 @@ body {
     background-image: linear-gradient(#b3cce2, #D9CCC1);
     background-repeat: no-repeat;
     background-attachment: fixed;
-    display: block;
+    display: flex;
+    flex-direction: column;
 }
 
 h1,
@@ -34,7 +35,7 @@ p {
 }
 
 pre .citacao_motivacional {
-    font-family: "tilt neon";
+    font-family: 'tilt neon';
     line-height: 1.5rem;
 }
 
@@ -44,11 +45,29 @@ p .autor,
     font-style: italic;
 }
 
-p .autor {
+div .autor {
     text-align: right;
 }
 
 p .data {
     text-align: left;
     font-size: .8rem;
+}
+
+div {
+    display: flex;
+    flex-direction: column;
+    margin-left: 1rem;
+    margin-right: 1rem;
+}
+
+div #Hello1 {
+    margin-bottom: 0;
+    word-spacing: 2rem;
+}
+
+div #Hello2 {
+    margin-top: 0;
+    margin-left: 1.8rem;
+    word-spacing: 2.2rem;
 }
