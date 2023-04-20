@@ -1,0 +1,54 @@
+@import url('https://fonts.google.com/specimen/Tilt+Neon?query=tilt+neon');
+
+* {
+    font-size: 16px;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background-image: linear-gradient(#b3cce2, #D9CCC1);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    display: block;
+}
+
+h1,
+h2 {
+    background-color: #005eb0;
+    color: #D9CCC1;
+}
+
+h1 {
+    font-size: 3rem;
+    letter-spacing: .5rem;
+    text-align: center;
+}
+
+h2 {
+    font-size: 1.5rem;
+}
+
+p {
+    font-size: 1rem;
+    color: #024059;
+}
+
+pre .citacao_motivacional {
+    font-family: "tilt neon";
+    line-height: 1.5rem;
+}
+
+p .autor,
+.data {
+    color: #2F4F4F;
+    font-style: italic;
+}
+
+p .autor {
+    text-align: right;
+}
+
+p .data {
+    text-align: left;
+    font-size: .8rem;
+}
