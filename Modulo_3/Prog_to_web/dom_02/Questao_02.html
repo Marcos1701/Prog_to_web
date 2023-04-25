@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>soma</title>
+</head>
+
+<body>
+    <label for="input">Valor 1: </label>
+    <input type="text" id="valor1"><br>
+    <label for="input">Valor 2: </label>
+    <input type="text" id="valor2"><br>
+    <button id="botaosoma">somar</button> <br>
+    <div id="resultado"></div>
+    <!-- <script src="soma.js"></script> -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var botaoExibir = document.getElementById('botaosoma');
+            botaoExibir.addEventListener('click', somar_valores);
+        });
+
+        function somar_valores() {
+            let valor1 = document.getElementById('valor1').value;
+            let valor2 = document.getElementById('valor2').value;
+            if (valor1 = '' || isNaN(parseInt(valor1))) {
+                alert("Insira um valor válido para o valor 1")
+            } else if (valor2 = '' || isNaN(parseInt(valor2))) {
+                alert("Insira um valor válido para o valor 2")
+            } else {
+                document.getElementById('resultado').innerHTML = `Resultado: ${parseInt(valor1) + parseInt(valor2)}`
+            }
+        }</script>
+</body>
+
+</html>
