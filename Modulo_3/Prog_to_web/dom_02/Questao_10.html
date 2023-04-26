@@ -18,12 +18,12 @@
     <button id="BotaoEnvia2">Adicionar a seleção2</button> <br>
 
     <br> <br>
-    <select id="armazena_itens1" size = "5"></select>
-    <select id="armazena_itens2" size = "5"></select>
+    <select id="armazena_itens1" size="5"></select>
+    <select id="armazena_itens2" size="5"></select>
     <br>
 
-    <button id="BotaoTransfere1" >transferir elemento da seleção 1 para a 2</button> 
-    <button id="BotaoTransfere2" >transferir elemento da seleção 2 para a 1</button>
+    <button id="BotaoTransfere1">transferir elemento da seleção 1 para a 2</button>
+    <button id="BotaoTransfere2">transferir elemento da seleção 2 para a 1</button>
 
     <script>
         let botao_Add1 = document.getElementById("BotaoEnvia1")
@@ -32,8 +32,6 @@
         let botao_tranfere1 = document.getElementById("BotaoTransfere1")
         let botao_tranfere2 = document.getElementById("BotaoTransfere2")
 
-        
-
         botao_Add1.addEventListener("click", adiciona_opcao1)
         botao_Add2.addEventListener("click", adiciona_opcao2)
         botao_tranfere1.addEventListener("click", transfere_1_para_2)
@@ -41,103 +39,86 @@
 
         function adiciona_opcao1() {
             let texto = document.getElementById("textoInserido").value
-
             if (texto === '') {
                 alert("O texto não pode ser vazio, insira algo..")
             } else {
-                const select = document.getElementById("armazena_itens1")
-                const filhos = select.children
-                let repetiu = false
-                for (let filho of filhos) {
-                    if (filho.textContent === texto) {
-                        repetiu = true
-                        break
-                    }
-                }
-                if (!repetiu) {
-                    const nova_opcao = document.createElement("option")
-                    nova_opcao.innerHTML = texto
-
-                    select.appendChild(nova_opcao)
-                } else {
-                    alert("Ops, esse elemento já foi inserido anteriormente..")
-                }
+                let opcao = document.createElement("option")
+                opcao.text = texto
+                document.getElementById("armazena_itens1").add(opcao)
             }
         }
 
         function adiciona_opcao2() {
             let texto = document.getElementById("textoInserido").value
-
             if (texto === '') {
                 alert("O texto não pode ser vazio, insira algo..")
             } else {
-                const select = document.getElementById("armazena_itens2")
-                const filhos = select.children
-                let repetiu = false
-                for (let filho of filhos) {
-                    if (filho.textContent === texto) {
-                        repetiu = true
-                        break
-                    }
-                }
-                if (!repetiu) {
-                    const nova_opcao = document.createElement("option")
-                    nova_opcao.innerHTML = texto
-
-                    select.appendChild(nova_opcao)
-                } else {
-                    alert("Ops, esse elemento já foi inserido anteriormente..")
-                }
+                let opcao = document.createElement("option")
+                opcao.text = texto
+                document.getElementById("armazena_itens2").add(opcao)
             }
         }
 
-        function transfere_1_para_2(){
-            const select1 = document.getElementById("armazena_itens1")
-
-            const select2 = document.getElementById("armazena_itens2")
-
-                const filho = select1.options[select1.selectedIndex].cloneNode(true)
-                const filhos_select2 = select2.children
-                let repetiu = false
-
-               
-                for (let filho_ of filhos_select2) {
-                    if (filho_.textContent === filho.textContent) {
-                        repetiu = true
-                        break
-                    }
-                }
-                if (!repetiu) {
-                    select1.removeChild(filho)
-                    select2.appendChild(filho)
-                } else {
-                    alert("Ops, esse elemento já foi inserido anteriormente no select 2..")
-                }
+        function transfere_1_para_2() {
+            let opcao_selecionada = document.getElementById("armazena_itens1").value
+            if (opcao_selecionada === '') {
+                alert("Selecione uma opção para transferir")
+            } else {
+                let opcao = document.createElement("option")
+                opcao.text = opcao_selecionada
+                document.getElementById("armazena_itens2").add(opcao)
+                document.getElementById("armazena_itens1").remove(document.getElementById("armazena_itens1").selectedIndex)
+            }
         }
 
-        function transfere_2_para_1(){
-            const select1 = document.getElementById("armazena_itens1")
-
-            const select2 = document.getElementById("armazena_itens2")
-
-                const filho = select2.options[select1.selectedIndex].cloneNode(true)
-                const filhos_select1 = select1.children
-                let repetiu = false
-
-               
-                for (let filho_ of filhos_select1) {
-                    if (filho_.textContent === filho.textContent) {
-                        repetiu = true
-                        break
-                    }
-                }
-                if (!repetiu) {
-                    select2.removeChild(filho)
-                    select1.appendChild(filho)
-                } else {
-                    alert("Ops, esse elemento já foi inserido anteriormente no select 1..")
-                }
+        function transfere_2_para_1() {
+            let opcao_selecionada = document.getElementById("armazena_itens2").value
+            if (opcao_selecionada === '') {
+                alert("Selecione uma opção para transferir")
+            } else {
+                let opcao = document.createElement("option")
+                opcao.text = opcao_selecionada
+                document.getElementById("armazena_itens1").add(opcao)
+                document.getElementById("armazena_itens2").remove(document.getElementById("armazena_itens2").selectedIndex)
+            }
         }
+
+       // botao_Add1.addEventListener("click", adiciona_opcao)
+        // botao_Add2.addEventListener("click", adiciona_opcao)
+        // botao_tranfere1.addEventListener("click", transfere)
+        // botao_tranfere2.addEventListener("click", transfere)
+
+        // function adiciona_opcao() {
+        //     let texto = document.getElementById("textoInserido").value
+        //     if (texto === '') {
+        //         alert("O texto não pode ser vazio, insira algo..")
+        //     } else {
+        //         let opcao = document.createElement("option")
+        //         opcao.text = texto
+        //         if (this.id === "BotaoEnvia1") {
+        //             document.getElementById("armazena_itens1").add(opcao)
+        //         } else {
+        //             document.getElementById("armazena_itens2").add(opcao)
+        //         }
+        //     }
+        // }
+
+
+        // function transfere() {
+        //     if (this.id === "BotaoTransfere1") {
+        //         let opcao = document.getElementById("armazena_itens1").value
+        //         let opcao2 = document.createElement("option")
+        //         opcao2.text = opcao
+        //         document.getElementById("armazena_itens2").add(opcao2)
+        //         document.getElementById("armazena_itens1").remove(document.getElementById("armazena_itens1").selectedIndex)
+        //     } else {
+        //         let opcao = document.getElementById("armazena_itens2").value
+        //         let opcao2 = document.createElement("option")
+        //         opcao2.text = opcao
+        //         document.getElementById("armazena_itens1").add(opcao2)
+        //         document.getElementById("armazena_itens2").remove(document.getElementById("armazena_itens2").selectedIndex)
+        //     }
+        // }
     </script>
 
 </body>
