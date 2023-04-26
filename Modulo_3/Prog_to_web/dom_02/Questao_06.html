@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <h1>Questão 6</h1>
+
+    <label for="textoInserido">Insira o texto a seguir: </label>
+    <input type="text" id="textoInserido"> <br>
+
+    <select id="MaiuscMinusc">
+        <option value="">-- Selecione uma opção a seguir --</option>
+        <option value="Maiusculo">Maiúsculo</option>
+        <option value="minusculo">minúsculo</option>
+    </select>
+    <br>
+    <button id="botaoEnvia">Enviar</button>
+    <br><br>
+    <div id="retorno"></div>
+
+    <script>
+        let botao = document.getElementById("botaoEnvia")
+
+        botao.addEventListener("click", altera_txt)
+
+        function altera_txt() {
+            let texto = document.getElementById("textoInserido").value
+
+            if (texto === '') {
+                alert("O texto não pode ser vazio, insira algo..")
+            } else {
+                const op_selecionada = document.getElementById("MaiuscMinusc").value
+                if (op_selecionada === "Maiusculo") {
+                    document.getElementById("retorno").innerHTML = texto.toUpperCase()
+                } else if (op_selecionada === "minusculo") {
+                    document.getElementById("retorno").innerHTML = texto.toLowerCase()
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>
