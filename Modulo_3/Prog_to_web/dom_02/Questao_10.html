@@ -9,7 +9,7 @@
 </head>
 
 <body>
-    <h1>Questão 09</h1>
+    <h1>Questão 10</h1>
 
     <label for="textoInserido">Insira o texto a seguir</label>
     <input type="text" id="textoInserido"><br>
@@ -18,12 +18,12 @@
     <button id="BotaoEnvia2">Adicionar a seleção2</button> <br>
 
     <br> <br>
-    <select id="armazena_itens1" ></select>
-    <select id="armazena_itens2" ></select>
+    <select id="armazena_itens1" size = "5"></select>
+    <select id="armazena_itens2" size = "5"></select>
     <br>
 
-    <button id="BotaoTransfere1">transferir elemento da seleção 1 para a 2</button> 
-    <button id="BotaoTransfere2">transferir elemento da seleção 2 para a 1</button>
+    <button id="BotaoTransfere1" >transferir elemento da seleção 1 para a 2</button> 
+    <button id="BotaoTransfere2" >transferir elemento da seleção 2 para a 1</button>
 
     <script>
         let botao_Add1 = document.getElementById("BotaoEnvia1")
@@ -94,15 +94,15 @@
         function transfere_1_para_2(){
             const select1 = document.getElementById("armazena_itens1")
 
-            const select2 = document.getElementById("armazena_itens1")
+            const select2 = document.getElementById("armazena_itens2")
 
-                const filho = select1.options[select1.selectedIndex]
+                const filho = select1.options[select1.selectedIndex].cloneNode(true)
                 const filhos_select2 = select2.children
                 let repetiu = false
 
                
                 for (let filho_ of filhos_select2) {
-                    if (filho_.textContent === texto) {
+                    if (filho_.textContent === filho.textContent) {
                         repetiu = true
                         break
                     }
@@ -118,15 +118,15 @@
         function transfere_2_para_1(){
             const select1 = document.getElementById("armazena_itens1")
 
-            const select2 = document.getElementById("armazena_itens1")
+            const select2 = document.getElementById("armazena_itens2")
 
-                const filho = select2.value
+                const filho = select2.options[select1.selectedIndex].cloneNode(true)
                 const filhos_select1 = select1.children
                 let repetiu = false
 
                
                 for (let filho_ of filhos_select1) {
-                    if (filho_.textContent === texto) {
+                    if (filho_.textContent === filho.textContent) {
                         repetiu = true
                         break
                     }
