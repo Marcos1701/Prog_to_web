@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <h1>Questão 09</h1>
+
+    <label for="textoInserido">Insira o texto a seguir</label>
+    <input type="text" id="textoInserido"><br>
+    <button id="BotaoEnvia1">Adicionar a seleção1</button>
+
+    <button id="BotaoEnvia2">Adicionar a seleção2</button> <br>
+
+    <br> <br>
+    <select id="armazena_itens1" ></select>
+    <select id="armazena_itens2" ></select>
+    <br>
+
+    <button id="BotaoTransfere1">transferir elemento da seleção 1 para a 2</button> 
+    <button id="BotaoTransfere2">transferir elemento da seleção 2 para a 1</button>
+
+    <script>
+        let botao_Add1 = document.getElementById("BotaoEnvia1")
+        let botao_Add2 = document.getElementById("BotaoEnvia2")
+
+        let botao_tranfere1 = document.getElementById("BotaoTransfere1")
+        let botao_tranfere2 = document.getElementById("BotaoTransfere2")
+
+        
+
+        botao_Add1.addEventListener("click", adiciona_opcao1)
+        botao_Add2.addEventListener("click", adiciona_opcao2)
+        botao_tranfere1.addEventListener("click", transfere_1_para_2)
+        botao_tranfere2.addEventListener("click", transfere_2_para_1)
+
+        function adiciona_opcao1() {
+            let texto = document.getElementById("textoInserido").value
+
+            if (texto === '') {
+                alert("O texto não pode ser vazio, insira algo..")
+            } else {
+                const select = document.getElementById("armazena_itens1")
+                const filhos = select.children
+                let repetiu = false
+                for (let filho of filhos) {
+                    if (filho.textContent === texto) {
+                        repetiu = true
+                        break
+                    }
+                }
+                if (!repetiu) {
+                    const nova_opcao = document.createElement("option")
+                    nova_opcao.innerHTML = texto
+
+                    select.appendChild(nova_opcao)
+                } else {
+                    alert("Ops, esse elemento já foi inserido anteriormente..")
+                }
+            }
+        }
+
+        function adiciona_opcao2() {
+            let texto = document.getElementById("textoInserido").value
+
+            if (texto === '') {
+                alert("O texto não pode ser vazio, insira algo..")
+            } else {
+                const select = document.getElementById("armazena_itens2")
+                const filhos = select.children
+                let repetiu = false
+                for (let filho of filhos) {
+                    if (filho.textContent === texto) {
+                        repetiu = true
+                        break
+                    }
+                }
+                if (!repetiu) {
+                    const nova_opcao = document.createElement("option")
+                    nova_opcao.innerHTML = texto
+
+                    select.appendChild(nova_opcao)
+                } else {
+                    alert("Ops, esse elemento já foi inserido anteriormente..")
+                }
+            }
+        }
+
+        function transfere_1_para_2(){
+            const select1 = document.getElementById("armazena_itens1")
+
+            const select2 = document.getElementById("armazena_itens1")
+
+                const filho = select1.options[select1.selectedIndex]
+                const filhos_select2 = select2.children
+                let repetiu = false
+
+               
+                for (let filho_ of filhos_select2) {
+                    if (filho_.textContent === texto) {
+                        repetiu = true
+                        break
+                    }
+                }
+                if (!repetiu) {
+                    select1.removeChild(filho)
+                    select2.appendChild(filho)
+                } else {
+                    alert("Ops, esse elemento já foi inserido anteriormente no select 2..")
+                }
+        }
+
+        function transfere_2_para_1(){
+            const select1 = document.getElementById("armazena_itens1")
+
+            const select2 = document.getElementById("armazena_itens1")
+
+                const filho = select2.value
+                const filhos_select1 = select1.children
+                let repetiu = false
+
+               
+                for (let filho_ of filhos_select1) {
+                    if (filho_.textContent === texto) {
+                        repetiu = true
+                        break
+                    }
+                }
+                if (!repetiu) {
+                    select2.removeChild(filho)
+                    select1.appendChild(filho)
+                } else {
+                    alert("Ops, esse elemento já foi inserido anteriormente no select 1..")
+                }
+        }
+    </script>
+
+</body>
+
+</html>
