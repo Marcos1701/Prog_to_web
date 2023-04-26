@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <h1>Questão 09</h1>
+
+    <label for="textoInserido">Insira o texto a seguir</label>
+    <input type="text" id="textoInserido">
+    <button id="BotaoEnvia">Adicionar a seleção</button> <br>
+    <label for="textopararemocao">Insira o texto que deseja remover a seguir</label>
+    <input type="text" id="textopararemocao">
+    <button id="BotaoRemove">remover da seleção</button>
+    <br><br>
+    <select id="seleciona_itens" size="5"></select>
+
+    <script>
+        let botao_Add = document.getElementById("BotaoEnvia")
+        let qtd = 1
+        let botao_Rem = document.getElementById("BotaoRemove")
+
+        botao_Add.addEventListener("click", adiciona_opcao)
+        botao_Rem.addEventListener("click", remove_opcao)
+
+        function adiciona_opcao() {
+            let texto = document.getElementById("textoInserido").value
+
+            if (texto === '') {
+                alert("O texto não pode ser vazio, insira algo..")
+            } else {
+                const select = document.getElementById("seleciona_itens")
+                const filhos = select.children
+                let repetiu = false
+                for (let filho of filhos) {
+                    if (filho.textContent === texto) {
+                        repetiu = true
+                        break
+                    }
+                }
+                if (!repetiu) {
+                    const nova_opcao = document.createElement("option")
+                    nova_opcao.innerHTML = texto
+                    nova_opcao.id = `opcao${qtd}`
+                    qtd++
+
+                    select.appendChild(nova_opcao)
+                } else {
+                    alert("Ops, esse elemento já foi inserido anteriormente..")
+                }
+            }
+        }
+
+        function remove_opcao(){
+            let texto = document.getElementById("textopararemocao").value
+
+            if (texto === '') {
+                alert("O texto para remoção não pode ser vazio, insira algo..")
+            } else {
+                const select = document.getElementById("seleciona_itens")
+                const filhos = select.children
+                let achou = false
+                for (let filho of filhos) {
+                    if (filho.textContent === texto) {
+                        select.removeChild(filho)
+                        achou = true
+                        break
+                    }
+                }
+                if(achou){
+                    alert(`a opção "${texto}" foi removida com sucesso..`)
+                }else{
+                    alert(`A opção "${texto}" não foi encontrada..`)
+                }
+                
+            }
+        }
+    </script>
+
+</body>
+
+</html>
