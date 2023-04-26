@@ -30,7 +30,10 @@
                     qtd++
                 }
             }
-            if (qtd > 0) {
+            if (qtd === 1) {
+                document.getElementById("retorno").innerHTML = `Apenas 1 checkbox está marcado..`
+
+            } else if (qtd > 1) {
                 document.getElementById("retorno").innerHTML = `${qtd} checkboxes estão marcados..`
             } else {
                 document.getElementById("retorno").innerHTML = "Nenhum checkbox marcado.."
