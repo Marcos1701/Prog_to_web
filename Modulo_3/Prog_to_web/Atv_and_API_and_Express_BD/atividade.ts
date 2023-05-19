@@ -1,29 +1,29 @@
-const express = require('express')
-const app = express()
+import express, { Application, Request, Response } from 'express';
+const app: Application = express()
 const port: number = 3000
 
 import { v4 as uuidv4 } from 'uuid'
 
 
 class Postagem {
-    id: number
+    id: string
     texto: string
-    qtd_curtidas: number
+    likes: number
 
-    constructor(id: number, text: string) {
+    constructor(id: string, text: string, likes?: number) {
         this.id = id
         this.texto = text
-        this.qtd_curtidas = 0
+        this.likes = likes? likes : 0
     }
 
     curtir(): void {
-        this.qtd_curtidas++
+        this.likes++
     }
 
     toString(): string {
         let aux: string = `
         id Postagem: ${this.id}
-        Quantidade de curtidas: ${this.qtd_curtidas}
+        Quantidade de curtidas: ${this.likes}
         texto inserido: ${this.texto}
         `
         return aux
@@ -31,7 +31,7 @@ class Postagem {
 }
 
 class microBlog {
-    Postagens: Postagem[] = []
+    private Postagens: Postagem[] = []
 
     create(postagem: Postagem) {
         if (this.retrieve(postagem.id) == -1) {
@@ -41,15 +41,17 @@ class microBlog {
         }
     }
 
-    curtir_postagem(id: number) {
+    curtir_postagem(id: string): number {
         let index: number = this.retrieve(id)
 
         if (index != -1) {
             this.Postagens[index].curtir()
+            return 200
         }
+        return 404
     }
 
-    retrieve(id: number): number {
+    retrieve(id: string): number {
         let index: number = -1
 
         for (let i = 0; i < this.Postagens.length; i++) {
@@ -62,7 +64,7 @@ class microBlog {
         return index
     }
 
-    delete(id: number): void {
+    delete(id: string): void {
         let index: number = this.retrieve(id)
 
         if (index != -1) {
@@ -95,47 +97,111 @@ class microBlog {
 
         return aux
     }
+
+    get_postagem(index: number){
+        return this.Postagens[index]
+    }
 }
 
 let blog: microBlog = new microBlog()
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
+app.use(express.static('public'));
 
-app.get('/', (request, response) => {
+app.get('/', (request: Request, response: Response) => {
     response.send('Bem vindo ao microblog!!')
 })
 
-app.get('/posts', (request, response) => {
-    response.send(blog.retrieveAll())
+app.get('/posts', (request: Request, response: Response) => {
+    response.json({"Posts": blog.retrieveAll()})
 })
 
-app.get('/posts/:id', (request, response) => {
-    let id: number = parseInt(request.params.id)
+app.get('/posts/:id', (request: Request, response: Response) => {
+    let id: string = request.params.id
     let index: number = blog.retrieve(id)
 
     if (index != -1) {
-        response.send(blog.Postagens[index])
+        response.json({"Postagem": blog.get_postagem(index)})
     } else {
         response.sendStatus(404)
     }
 })
 
-app.delete('/posts/:id', (request, response) => {
-    let id: number = parseInt(request.params.id)
+app.delete('/posts/:id', (request: Request, response: Response) => {
+    let id: string = request.params.id
     let index: number = blog.retrieve(id)
 
     if (index != -1) {
         blog.delete(id)
-        response.sendStatus(200)
+        response.sendStatus(204)
     } else {
         response.sendStatus(404)
     }
 })
 
-app.post('/posts', (request, response) => {
+app.post('/posts', (request: Request, response: Response) => {
     //uuid
     let id: string = uuidv4()
     let texto: string = request.body.texto
 
+    const novo_post: Postagem = new Postagem(id,texto)
+    blog.create(novo_post)
+
+    response.sendStatus(201)
+    response.json({"novo_post": blog.retrieve(id)})
 })
+
+app.put('/posts/:id', (request: Request, response: Response) => {
+    const id: string = request.params.id
+    let index: number = blog.retrieve(id)
+
+    if(index === -1){
+        response.sendStatus(404)
+    }
+    const text: string = request.params.texto
+    const post_alterado: Postagem = new Postagem(id, text)
+
+    blog.update(post_alterado)
+    response.sendStatus(200)
+})
+
+app.patch('/posts/:id', (request: Request, response: Response) => {
+    const id: string = response.params.id
+    let index: number = blog.retrieve(id)
+
+    if(index === -1){
+        response.sendStatus(404)
+    }
+    const text: string = request.params.texto
+    const likes: number = parseInt(request.params.likes)
+    if(!text && !likes){
+        response.send('Ops, nenhum parâmetro foi passado para alteração..')
+    }
+
+    let post: Postagem = blog.get_postagem(index)
+    let post_alterado: Postagem
+    if(likes && text){
+        post_alterado = new Postagem(id, text, likes)
+    }else if(text){
+        post_alterado = new Postagem(id,post.texto,likes)
+    }else{
+        post_alterado = new Postagem(id,text,post.likes)
+    }
+
+    blog.update(post_alterado)
+    response.sendStatus(200)
+})
+
+app.patch('/posts/:id/like', (request: Request, response: Response) => {
+    const id: string = response.params.id
+    response.sendStatus(blog.curtir_postagem(id))
+})
+
+app.use(function (req: Request, res: Response, next: Function) {
+    res.status(404).send('Sorry cant find that!');
+});
+
+app.listen(port, () => {
+    console.log('Servidor rodando');
+  });
