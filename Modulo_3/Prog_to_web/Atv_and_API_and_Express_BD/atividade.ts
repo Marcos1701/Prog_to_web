@@ -1,4 +1,5 @@
-import express, { Application, Request, Response } from 'express';
+import { Application, Request, Response } from 'express';
+const express = require('express')
 const app: Application = express()
 const port: number = 3000
 
@@ -13,7 +14,7 @@ class Postagem {
     constructor(id: string, text: string, likes?: number) {
         this.id = id
         this.texto = text
-        this.likes = likes? likes : 0
+        this.likes = likes ? likes : 0
     }
 
     curtir(): void {
@@ -98,7 +99,7 @@ class microBlog {
         return aux
     }
 
-    get_postagem(index: number){
+    get_postagem(index: number) {
         return this.Postagens[index]
     }
 }
@@ -114,22 +115,22 @@ app.get('/', (request: Request, response: Response) => {
 })
 
 app.get('/posts', (request: Request, response: Response) => {
-    response.json({"Posts": blog.retrieveAll()})
+    response.json({ "Posts": blog.retrieveAll() })
 })
 
 app.get('/posts/:id', (request: Request, response: Response) => {
-    let id: string = request.params.id
+    let id: string = request.body.id
     let index: number = blog.retrieve(id)
 
     if (index != -1) {
-        response.json({"Postagem": blog.get_postagem(index)})
+        response.json({ "Postagem": blog.get_postagem(index) })
     } else {
-        response.sendStatus(404)
+        response.sendStatus(404).send("Postagem não encontrada!!")
     }
 })
 
 app.delete('/posts/:id', (request: Request, response: Response) => {
-    let id: string = request.params.id
+    let id: string = request.body.id
     let index: number = blog.retrieve(id)
 
     if (index != -1) {
@@ -145,21 +146,20 @@ app.post('/posts', (request: Request, response: Response) => {
     let id: string = uuidv4()
     let texto: string = request.body.texto
 
-    const novo_post: Postagem = new Postagem(id,texto)
+    const novo_post: Postagem = new Postagem(id, texto)
     blog.create(novo_post)
 
-    response.sendStatus(201)
-    response.json({"novo_post": blog.retrieve(id)})
+    response.sendStatus(201).json({ "novo_post": blog.retrieve(id) })
 })
 
 app.put('/posts/:id', (request: Request, response: Response) => {
-    const id: string = request.params.id
+    const id: string = request.body.id
     let index: number = blog.retrieve(id)
 
-    if(index === -1){
+    if (index === -1) {
         response.sendStatus(404)
     }
-    const text: string = request.params.texto
+    const text: string = request.body.texto
     const post_alterado: Postagem = new Postagem(id, text)
 
     blog.update(post_alterado)
@@ -167,26 +167,26 @@ app.put('/posts/:id', (request: Request, response: Response) => {
 })
 
 app.patch('/posts/:id', (request: Request, response: Response) => {
-    const id: string = response.params.id
+    const id: string = request.body.id
     let index: number = blog.retrieve(id)
 
-    if(index === -1){
+    if (index === -1) {
         response.sendStatus(404)
     }
-    const text: string = request.params.texto
-    const likes: number = parseInt(request.params.likes)
-    if(!text && !likes){
+    const text: string = request.body.texto
+    const likes: number = parseInt(request.body.likes)
+    if (!text && !likes) {
         response.send('Ops, nenhum parâmetro foi passado para alteração..')
     }
 
     let post: Postagem = blog.get_postagem(index)
     let post_alterado: Postagem
-    if(likes && text){
+    if (likes && text) {
         post_alterado = new Postagem(id, text, likes)
-    }else if(text){
-        post_alterado = new Postagem(id,post.texto,likes)
-    }else{
-        post_alterado = new Postagem(id,text,post.likes)
+    } else if (text) {
+        post_alterado = new Postagem(id, text, post.likes)
+    } else {
+        post_alterado = new Postagem(id, post.texto, likes)
     }
 
     blog.update(post_alterado)
@@ -194,7 +194,7 @@ app.patch('/posts/:id', (request: Request, response: Response) => {
 })
 
 app.patch('/posts/:id/like', (request: Request, response: Response) => {
-    const id: string = response.params.id
+    const id: string = request.body.id
     response.sendStatus(blog.curtir_postagem(id))
 })
 
@@ -204,4 +204,4 @@ app.use(function (req: Request, res: Response, next: Function) {
 
 app.listen(port, () => {
     console.log('Servidor rodando');
-  });
+});
