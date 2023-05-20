@@ -1,19 +1,28 @@
 import { Application, Request, Response } from 'express';
 const express = require('express')
-const app: Application = express()
+const app: Application = express() as Application;
 const port: number = 3000
 
 import { v4 as uuidv4 } from 'uuid'
 
+import { Client, QueryResult } from 'pg';
+const client = new Client({
+    user: 'postgres',
+    host: 'localhost',
+    database: 'Aplicacao_bd',
+    password: 'postgres',
+    port: 5432,
+});
+
 
 class Postagem {
     id: string
-    texto: string
+    text: string
     likes: number
 
     constructor(id: string, text: string, likes?: number) {
         this.id = id
-        this.texto = text
+        this.text = text
         this.likes = likes ? likes : 0
     }
 
@@ -25,7 +34,7 @@ class Postagem {
         let aux: string = `
         id Postagem: ${this.id}
         Quantidade de curtidas: ${this.likes}
-        texto inserido: ${this.texto}
+        texto inserido: ${this.text}
         `
         return aux
     }
@@ -104,7 +113,64 @@ class microBlog {
     }
 }
 
-let blog: microBlog = new microBlog()
+class MicroblogPersistente {
+    constructor() {
+        client.connect()
+    }
+
+    async create(postagem: Postagem) {
+        if (!this.retrieve(postagem.id)) {
+            await client.query(`INSERT INTO post VALUES ('${postagem.id}', '${postagem.text}', ${postagem.likes})`)
+        } else {
+            console.log("Postagem já existe!!")
+        }
+    }
+
+    async curtir_postagem(id: string): Promise<number> {
+
+        if (await this.retrieve(id)) {
+            await client.query(`UPDATE post SET likes = likes + 1 WHERE id = '${id}'`)
+            return 200
+        }
+        return 404
+    }
+
+    async retrieve(id: string): Promise<boolean> {
+        const retorno = await
+            client.query(`SELECT * FROM post WHERE id = '${id}'`).then((res: QueryResult) => {
+                return res.rows
+            })
+
+        return retorno.length > 0
+    }
+
+    async delete(id: string): Promise<void> {
+        await client.query(`DELETE FROM post WHERE id = '${id}'`)
+    }
+
+    async update(postagem: Postagem): Promise<void> {
+        await client.query(`UPDATE post SET text = '${postagem.text}', likes = ${postagem.likes} WHERE id = '${postagem.id}'`)
+    }
+
+    async retrieveAll(): Promise<Postagem[]> {
+        const retorno: QueryResult = await client.query(`SELECT * FROM post`)
+        let postagens: Postagem[] = []
+
+        for (let postagem of retorno.rows) {
+            postagens.push(new Postagem(postagem.id, postagem.text, postagem.likes))
+        }
+        return postagens
+    }
+
+    async get_postagem(id: string): Promise<Postagem> {
+        const retorno: QueryResult = await client.query(`SELECT * FROM post WHERE id = '${id}'`)
+
+        return new Postagem(retorno.rows[0].id, retorno.rows[0].text, retorno.rows[0].likes)
+    }
+
+}
+
+let blog: MicroblogPersistente = new MicroblogPersistente()
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
@@ -114,88 +180,84 @@ app.get('/', (request: Request, response: Response) => {
     response.send('Bem vindo ao microblog!!')
 })
 
-app.get('/posts', (request: Request, response: Response) => {
-    response.json({ "Posts": blog.retrieveAll() })
+app.get('/posts', async (request: Request, response: Response) => {
+    response.json({ "Postagens": await blog.retrieveAll() })
 })
 
-app.get('/posts/:id', (request: Request, response: Response) => {
+app.get('/posts/:id', async (request: Request, response: Response) => {
     let id: string = request.body.id
-    let index: number = blog.retrieve(id)
 
-    if (index != -1) {
-        response.json({ "Postagem": blog.get_postagem(index) })
-    } else {
-        response.sendStatus(404).send("Postagem não encontrada!!")
-    }
-})
+    if (await blog.retrieve(id)) {
+        response.json({ "Postagem": await blog.get_postagem(id) })
 
-app.delete('/posts/:id', (request: Request, response: Response) => {
-    let id: string = request.body.id
-    let index: number = blog.retrieve(id)
-
-    if (index != -1) {
-        blog.delete(id)
-        response.sendStatus(204)
     } else {
         response.sendStatus(404)
     }
 })
 
-app.post('/posts', (request: Request, response: Response) => {
-    //uuid
-    let id: string = uuidv4()
-    let texto: string = request.body.texto
+app.delete('/posts/:id', async (request: Request, response: Response) => {
+    let id: string = request.body.id
 
-    const novo_post: Postagem = new Postagem(id, texto)
-    blog.create(novo_post)
-
-    response.sendStatus(201).json({ "novo_post": blog.retrieve(id) })
-})
-
-app.put('/posts/:id', (request: Request, response: Response) => {
-    const id: string = request.body.id
-    let index: number = blog.retrieve(id)
-
-    if (index === -1) {
+    if (await blog.retrieve(id)) {
+        await blog.delete(id)
+        response.sendStatus(200)
+    } else {
         response.sendStatus(404)
     }
-    const text: string = request.body.texto
-    const post_alterado: Postagem = new Postagem(id, text)
-
-    blog.update(post_alterado)
-    response.sendStatus(200)
 })
 
-app.patch('/posts/:id', (request: Request, response: Response) => {
+app.post('/posts', async (request: Request, response: Response) => {
     const id: string = request.body.id
-    let index: number = blog.retrieve(id)
+    const text: string = request.body.text
+    const postagem: Postagem = new Postagem(id, text)
 
-    if (index === -1) {
+    await blog.create(postagem)
+    response.sendStatus(201)
+})
+
+app.put('/posts/:id/like', async (request: Request, response: Response) => {
+    const id: string = request.body.id
+
+    if (await blog.retrieve(id)) {
+        await blog.curtir_postagem(id)
+        response.sendStatus(200)
+    } else {
         response.sendStatus(404)
     }
-    const text: string = request.body.texto
+})
+
+app.patch('/posts/:id', async (request: Request, response: Response) => {
+    const id: string = request.body.id
+    // let index: number = blog.retrieve(id)
+
+    if (!(await blog.retrieve(id))) {
+        response.sendStatus(404)
+    }
+    const text: string = request.body.text
     const likes: number = parseInt(request.body.likes)
     if (!text && !likes) {
         response.send('Ops, nenhum parâmetro foi passado para alteração..')
     }
 
-    let post: Postagem = blog.get_postagem(index)
+    let post: Postagem = await blog.get_postagem(id).then((res: Postagem) => {
+        return res
+    })
     let post_alterado: Postagem
     if (likes && text) {
         post_alterado = new Postagem(id, text, likes)
     } else if (text) {
         post_alterado = new Postagem(id, text, post.likes)
     } else {
-        post_alterado = new Postagem(id, post.texto, likes)
+        post_alterado = new Postagem(id, post.text, likes)
     }
 
-    blog.update(post_alterado)
+    await blog.update(post_alterado)
     response.sendStatus(200)
 })
 
-app.patch('/posts/:id/like', (request: Request, response: Response) => {
+app.patch('/posts/:id/like', async (request: Request, response: Response) => {
     const id: string = request.body.id
-    response.sendStatus(blog.curtir_postagem(id))
+    response.sendStatus(await blog.curtir_postagem(id))
 })
 
 app.use(function (req: Request, res: Response, next: Function) {
@@ -205,3 +267,5 @@ app.use(function (req: Request, res: Response, next: Function) {
 app.listen(port, () => {
     console.log('Servidor rodando');
 });
+
+
