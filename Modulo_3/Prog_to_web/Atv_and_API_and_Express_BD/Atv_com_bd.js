@@ -49,60 +49,6 @@ class Postagem {
         this._comentarios = comentarios;
     }
 }
-class microBlog {
-    Postagens = [];
-    create(postagem) {
-        if (this.retrieve(postagem.id) == -1) {
-            this.Postagens.push(postagem);
-        }
-        else {
-            console.log("Postagem já existe!!");
-        }
-    }
-    curtir_postagem(id) {
-        let index = this.retrieve(id);
-        if (index != -1) {
-            this.Postagens[index].curtir();
-            return 200;
-        }
-        return 404;
-    }
-    retrieve(id) {
-        let index = -1;
-        for (let i = 0; i < this.Postagens.length; i++) {
-            if (this.Postagens[i].id == id) {
-                index = i;
-                break;
-            }
-        }
-        return index;
-    }
-    delete(id) {
-        let index = this.retrieve(id);
-        if (index != -1) {
-            this.Postagens.splice(index, 1);
-        }
-    }
-    update(postagem) {
-        let index = this.retrieve(postagem.id);
-        if (index != -1) {
-            this.Postagens[index] = postagem;
-        }
-    }
-    retrieveAll() {
-        return this.Postagens;
-    }
-    toString_geral() {
-        let aux = '';
-        for (let postagem of this.Postagens) {
-            aux += postagem.toString();
-        }
-        return aux;
-    }
-    get_postagem(index) {
-        return this.Postagens[index];
-    }
-}
 class MicroblogPersistente {
     constructor() {
         this.inicializar();
