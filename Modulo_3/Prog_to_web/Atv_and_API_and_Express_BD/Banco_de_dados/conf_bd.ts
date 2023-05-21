@@ -15,8 +15,16 @@ export async function createTable() {
             id TEXT PRIMARY KEY,
             text TEXT NOT NULL,
             likes INTEGER
-        )
-    `)
+        );
+    `);
+    await db.exec(`
+        CREATE TABLE IF NOT EXISTS comentarios (
+            id TEXT PRIMARY KEY,
+            text TEXT NOT NULL,
+            postagem_id TEXT NOT NULL,
+            FOREIGN KEY (postagem_id) REFERENCES postagens(id)
+        );
+    `);
 }
 
 export async function insertPostagem(id: string, text: string, likes: number): Promise<void> {
@@ -76,5 +84,53 @@ export async function curtirPostagem(id: string) {
     const db = await openDb()
     await db.run(`
         UPDATE postagens SET likes = likes + 1 WHERE id = '${id}'
+    `)
+}
+
+export async function insertComentario(id: string, text: string, postagem_id: string) {
+    const db = await openDb()
+    await db.run(`
+        INSERT INTO comentarios (id, text, postagem_id) VALUES ('${id}', '${text}', '${postagem_id}')
+    `)
+}
+
+export async function retrieveComentarios(postagem_id: string) {
+    const db = await openDb()
+    const comentarios = await db.all(`
+        SELECT * FROM comentarios WHERE postagem_id = '${postagem_id}'
+    `).then((rows) => {
+        return rows
+    })
+    return comentarios
+}
+
+export async function retrieveComentario(id_postagem: string, id: string) {
+    const db = await openDb()
+    const comentario = await db.get(`
+        SELECT * FROM comentarios WHERE id = '${id}' AND postagem_id = '${id_postagem}'
+    `).then((row) => {
+        return row
+    }).catch((err) => {
+        console.log(err)
+    })
+
+    if (!comentario) {
+        throw new Error("Comentário não encontrado");
+    }
+    return comentario
+
+}
+
+export async function deleteComentario(id_postagem: string, id: string) {
+    const db = await openDb()
+    await db.run(`
+        DELETE FROM comentarios WHERE id = '${id}' AND postagem_id = '${id_postagem}'
+    `)
+}
+
+export async function updateComentario(id_postagem: string, id: string, text: string) {
+    const db = await openDb()
+    await db.run(`
+        UPDATE comentarios SET text = '${text}' WHERE id = '${id}' AND postagem_id = '${id_postagem}'
     `)
 }
