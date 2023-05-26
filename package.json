@@ -3,11 +3,16 @@
   "version": "1.0.0",
   "license": "MIT",
   "dependencies": {
+    "@types/cors": "^2.8.13",
     "@types/sqlite3": "^3.1.8",
+    "cors": "^2.8.5",
     "express": "^4.18.2",
+    "firebase": "^9.22.1",
+    "firestore-wrapper": "^0.1.8",
     "pg": "^8.11.0",
     "prompt-sync": "^4.2.0",
-    "sqlite": "^4.2.0",
+    "railway": "^2.0.17",
+    "sqlite": "^4.2.1",
     "sqlite3": "^5.1.6",
     "uuid": "^9.0.0"
   },
