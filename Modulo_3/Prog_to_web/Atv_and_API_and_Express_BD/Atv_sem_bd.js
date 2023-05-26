@@ -7,6 +7,9 @@ const express_1 = __importDefault(require("express"));
 const uuid_1 = require("uuid");
 const app = (0, express_1.default)();
 const port = 3000;
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = require('./swagger.json');
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 class Postagem {
     _id;
     _text;

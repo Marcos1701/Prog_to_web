@@ -4,6 +4,10 @@ const app: Application = express();
 const port: number = 3000
 
 import { v4 as uuidv4 } from 'uuid'
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = require('./swagger.json');
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 import {
     openDb,
@@ -203,6 +207,11 @@ app.use(express.urlencoded({ extended: true }))
 app.use(express.static('public'));
 app.use(express.json())
 let blog: MicroblogPersistente = new MicroblogPersistente()
+
+
+app.get('/swagger', (request: Request, response: Response) => {
+    response.sendFile(__dirname + '/swagger.json')
+})
 
 
 app.get('/', (request: Request, response: Response) => {

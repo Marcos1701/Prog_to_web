@@ -7,6 +7,9 @@ const express_1 = __importDefault(require("express"));
 const app = (0, express_1.default)();
 const port = 3000;
 const uuid_1 = require("uuid");
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = require('./swagger.json');
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 const conf_bd_js_1 = require("./Banco_de_dados/conf_bd.js");
 class Postagem {
     _id;
@@ -173,6 +176,9 @@ app.use(express_1.default.urlencoded({ extended: true }));
 app.use(express_1.default.static('public'));
 app.use(express_1.default.json());
 let blog = new MicroblogPersistente();
+app.get('/swagger', (request, response) => {
+    response.sendFile(__dirname + '/swagger.json');
+});
 app.get('/', (request, response) => {
     response.send('Bem vindo ao microblog!!');
 });

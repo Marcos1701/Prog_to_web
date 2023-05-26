@@ -4,6 +4,11 @@ import { v4 as uuidv4 } from 'uuid';
 const app: Application = express();
 const port: number = 3000
 
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = require('./swagger.json');
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
 interface Comentario {
     id: string,
     text: string
