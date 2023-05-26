@@ -11,6 +11,7 @@
     "firestore-wrapper": "^0.1.8",
     "pg": "^8.11.0",
     "prompt-sync": "^4.2.0",
+    "railway": "^2.0.17",
     "sqlite": "^4.2.1",
     "sqlite3": "^5.1.6",
     "uuid": "^9.0.0"
