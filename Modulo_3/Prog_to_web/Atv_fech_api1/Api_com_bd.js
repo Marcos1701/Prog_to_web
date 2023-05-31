@@ -7,7 +7,7 @@ const express_1 = __importDefault(require("express"));
 const app = (0, express_1.default)();
 const port = 3000;
 const uuid_1 = require("uuid");
-const conf_bd_js_1 = require("./Banco_de_dados/conf_bd.js");
+const conf_bd_sqlite_js_1 = require("./Banco_de_dados/conf_bd_sqlite.js");
 class Postagem {
     _id;
     _text;
@@ -55,8 +55,8 @@ class MicroblogPersistente {
     }
     async inicializar() {
         try {
-            await (0, conf_bd_js_1.openDb)();
-            await (0, conf_bd_js_1.createTable)();
+            await (0, conf_bd_sqlite_js_1.openDb)();
+            await (0, conf_bd_sqlite_js_1.createTable)();
         }
         catch (err) {
             console.error(err);
@@ -64,7 +64,7 @@ class MicroblogPersistente {
     }
     async create(postagem) {
         try {
-            await (0, conf_bd_js_1.insertPostagem)(postagem.id, postagem.text, postagem.likes);
+            await (0, conf_bd_sqlite_js_1.insertPostagem)(postagem.id, postagem.text, postagem.likes);
         }
         catch (err) {
             console.error(err);
@@ -72,7 +72,7 @@ class MicroblogPersistente {
     }
     async curtir_postagem(id) {
         try {
-            await (0, conf_bd_js_1.curtirPostagem)(id);
+            await (0, conf_bd_sqlite_js_1.curtirPostagem)(id);
         }
         catch (err) {
             console.error(err);
@@ -81,7 +81,7 @@ class MicroblogPersistente {
     async retrieve(id) {
         let postagem;
         try {
-            let aux = await (0, conf_bd_js_1.retrievePostagem)(id);
+            let aux = await (0, conf_bd_sqlite_js_1.retrievePostagem)(id);
             postagem = new Postagem(aux.id, aux.text, aux.likes);
             postagem.add_comentarios(await this.retrieveComentarios(id));
         }
@@ -94,7 +94,7 @@ class MicroblogPersistente {
     }
     async delete(id) {
         try {
-            await (0, conf_bd_js_1.deletePostagem)(id);
+            await (0, conf_bd_sqlite_js_1.deletePostagem)(id);
             return true;
         }
         catch (err) {
@@ -105,7 +105,7 @@ class MicroblogPersistente {
     async retrieveAll() {
         try {
             let postagens = [];
-            let postagens_bd = await (0, conf_bd_js_1.retrieveAllPostagens)();
+            let postagens_bd = await (0, conf_bd_sqlite_js_1.retrieveAllPostagens)();
             for (let postagem of postagens_bd) {
                 postagens.push(new Postagem(postagem.id, postagem.text, postagem.likes));
                 postagens[postagens.length - 1].add_comentarios(await this.retrieveComentarios(postagem.id));
@@ -119,7 +119,7 @@ class MicroblogPersistente {
     }
     async update(postagem) {
         try {
-            await (0, conf_bd_js_1.updatePostagem)(postagem.id, postagem.text, postagem.likes);
+            await (0, conf_bd_sqlite_js_1.updatePostagem)(postagem.id, postagem.text, postagem.likes);
         }
         catch (err) {
             console.error(err);
@@ -128,7 +128,7 @@ class MicroblogPersistente {
     async retrieveComentarios(id) {
         try {
             let comentarios = [];
-            let comentarios_bd = await (0, conf_bd_js_1.retrieveComentarios)(id);
+            let comentarios_bd = await (0, conf_bd_sqlite_js_1.retrieveComentarios)(id);
             for (let comentario of comentarios_bd) {
                 comentarios.push({ id: comentario.id, text: comentario.text });
             }
@@ -140,13 +140,13 @@ class MicroblogPersistente {
         }
     }
     async retrieveComentario(id_postagem, id_comentario) {
-        let comentario_bd = await (0, conf_bd_js_1.retrieveComentario)(id_postagem, id_comentario);
+        let comentario_bd = await (0, conf_bd_sqlite_js_1.retrieveComentario)(id_postagem, id_comentario);
         const comentario = { id: comentario_bd.id, text: comentario_bd.text };
         return comentario;
     }
     async insertComentario(id_postagem, comentario) {
         try {
-            await (0, conf_bd_js_1.insertComentario)((0, uuid_1.v4)(), comentario, id_postagem);
+            await (0, conf_bd_sqlite_js_1.insertComentario)((0, uuid_1.v4)(), comentario, id_postagem);
         }
         catch (err) {
             console.error(err);
@@ -154,7 +154,7 @@ class MicroblogPersistente {
     }
     async deleteComentario(id_postagem, id_comentario) {
         try {
-            await (0, conf_bd_js_1.deleteComentario)(id_postagem, id_comentario);
+            await (0, conf_bd_sqlite_js_1.deleteComentario)(id_postagem, id_comentario);
         }
         catch (err) {
             console.error(err);
@@ -162,7 +162,7 @@ class MicroblogPersistente {
     }
     async updateComentario(id_postagem, id_comentario, comentario) {
         try {
-            await (0, conf_bd_js_1.updateComentario)(id_postagem, id_comentario, comentario);
+            await (0, conf_bd_sqlite_js_1.updateComentario)(id_postagem, id_comentario, comentario);
         }
         catch (err) {
             console.error(err);
@@ -345,7 +345,7 @@ app.delete('/posts/:id/comentarios/:id_comentario', async (request, response) =>
     let id_postagem = request.body.id;
     let id_comentario = request.body.id_comentario;
     try {
-        (0, conf_bd_js_1.retrieveComentario)(id_postagem, id_comentario);
+        (0, conf_bd_sqlite_js_1.retrieveComentario)(id_postagem, id_comentario);
         await blog.deleteComentario(id_postagem, id_comentario);
         response.sendStatus(204);
     }

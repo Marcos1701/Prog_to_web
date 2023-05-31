@@ -9,4 +9,4 @@ const client = new Client.Client({
     database: 'db_atv_fech_api1'
 });
 
-export {client}
+export { client }

@@ -12,7 +12,7 @@ import {
     curtirPostagem, retrieveComentarios, insertComentario,
     deleteComentario, retrieveComentario,
     updateComentario
-} from './Banco_de_dados/conf_bd.js'
+} from './Banco_de_dados/conf_bd_sqlite.js'
 
 interface Comentario {
     id: string,
