@@ -134,32 +134,3 @@ export async function updateComentario(id_postagem: string, id: string, text: st
         UPDATE comentarios SET text = '${text}' WHERE id = '${id}' AND postagem_id = '${id_postagem}'
     `)
 }
-// Import the functions you need from the SDKs you need
-// import { initializeApp,FirebaseApp } from "firebase/app";
-// import { getAnalytics, Analytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-// const firebaseConfig = {
-//   apiKey: "AIzaSyDE29LyTBwnUrcDDHZMcvKjZU-301tu2f4",
-//   authDomain: "atv-fech-api.firebaseapp.com",
-//   projectId: "atv-fech-api",
-//   storageBucket: "atv-fech-api.appspot.com",
-//   messagingSenderId: "595036280141",
-//   appId: "1:595036280141:web:20b0d36d86213e2cb5d304",
-//   measurementId: "G-B6HKVTXLYH"
-// };
-
-// // Initialize Firebase
-// const app: FirebaseApp = initializeApp(firebaseConfig);
-// const analytics: Analytics = getAnalytics(app);
-
-//consulta de dados
-
-// const db = getFirestore(app);
-
-// const querySnapshot = await getDocs(collection(db, "postagens"));
-
-// export default app;
