@@ -140,7 +140,9 @@ export async function curtirPostagem(req: Request, res: Response) {
     try {
         await client.query(`
         UPDATE postagens SET likes = likes + 1 WHERE id = '${id}'`)
-        res.sendStatus(200);
+        const likes = await client.query(`
+        SELECT likes FROM postagens WHERE id = '${id}'`)
+        res.sendStatus(200).json({ "likes": likes.rows })
     } catch (err) {
         if (err instanceof Error) {
             console.log(`Erro ao curtir postagem: ${err.message}`)

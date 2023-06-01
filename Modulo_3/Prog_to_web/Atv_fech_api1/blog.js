@@ -9,8 +9,9 @@ posts.forEach(async (post) => {
     btnLike.onclick = async () => {
         const response = await fetch(`http://localhost:3000/posts/${postid}/like`, { method: 'POST' })
         if (response.status == 200) {
-            const likeCount = post.querySelector('#qtd_likes');
-            likeCount.innerText = parseInt(likeCount.innerText) + 1;
+            const { likes } = await response.json();
+            const postItens = post.querySelectorAll('p')
+            postItens[1].innerText = `${parseInt(likes) + 1} like(s)`;
         } else {
             alert('Erro ao curtir post')
         }
@@ -19,8 +20,11 @@ posts.forEach(async (post) => {
 
 const loadPosts = async () => {
     const response = await fetch('http://localhost:3000/posts')
-    const posts = await response.json();
+    let posts = await response.json();
 
+    posts = posts.sort((a, b) => {
+        a.data_criacao < b.data_criacao ? 1 : -1
+    });
     posts.forEach(post => {
         appendPost(post);
     });
@@ -61,6 +65,44 @@ appendPost = (post) => {
 
     document.getElementById('timeline').append(postElement);
 }
+
+deletePost = async (postid) => {
+    const response = await fetch(`http://localhost:3000/posts/${postid}`, { method: 'DELETE' })
+    if (response.status == 204) {
+        const postElement = document.getElementById(postid);
+        postElement.remove();
+    } else {
+        alert('Erro ao deletar post')
+    }
+}
+
+
+updatepost = async (postid) => {
+    const postElement = document.getElementById(postid);
+    const postTitle = postElement.querySelectorAll('h3')[0]
+    const postText = postElement.querySelectorAll('p')[0]
+
+    const newPost = {
+        "title": postTitle.innerText,
+        "text": postText.innerText,
+        "likes": 0
+    };
+
+    const config = {
+        'method': 'PUT',
+        'headers': {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(newPost)
+    };
+
+    const response = await fetch(`http://localhost:3000/posts/${postid}`, config);
+    const post = await response.json();
+
+    postTitle.innerText = post.title;
+    postText.innerText = post.text;
+}
+
 
 window.onload = () => {
     const btnAddPost = document.getElementById('add-post')
