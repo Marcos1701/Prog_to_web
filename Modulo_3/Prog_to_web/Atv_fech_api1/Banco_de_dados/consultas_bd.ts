@@ -3,7 +3,7 @@ import { Request, Response } from 'express'
 import { client } from './conf_bd_pg.js'
 import { v4 as uuid } from 'uuid'
 
-const validaid = (id: string) => {
+const validastring = (id: string) => {
     if (id === '' || id === undefined || id === null) {
         return false
     }
@@ -13,10 +13,12 @@ const validaid = (id: string) => {
     try {
         await client.connect()
         await client.query(`
-        CREATE TABLE IF NOT EXISTS postagens (
+        CREATE OR REPLACE TABLE IF NOT EXISTS postagens (
          id varchar not null PRIMARY KEY,
+         title varchar NOT NULL,
          text varchar NOT NULL,
-         likes INT
+         likes INT,
+         data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     `);
         await client.query(`
@@ -24,6 +26,7 @@ const validaid = (id: string) => {
         id varchar PRIMARY KEY,
         text varchar NOT NULL,
         postagem_id varchar NOT NULL,
+        data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (postagem_id) REFERENCES postagens(id)
     );
     `);
@@ -37,10 +40,10 @@ const validaid = (id: string) => {
 })();
 
 export async function insertPostagem(req: Request, res: Response) {
-    const { text, likes } = req.body
+    const { title, text, likes } = req.body
     try {
         await client.query(`
-        INSERT INTO postagens (id, text, likes) VALUES ('${uuid()}', '${text}', ${likes})`)
+        INSERT INTO postagens (id,title, text, likes,data_criacao) VALUES ('${uuid()}',${title}, '${text}', ${likes}, DEFAULT)`)
         res.sendStatus(201);
     } catch (err) {
         if (err instanceof Error) {
@@ -54,11 +57,8 @@ export async function insertPostagem(req: Request, res: Response) {
 export async function retrievePostagem(req: Request, res: Response) {
 
     const { id } = req.params
-    if (!validaid(id)) {
-        res.send({
-            "erro": "id inválido",
-            "StatusCode": "400"
-        });
+    if (!validastring(id)) {
+        res.sendStatus(400);
     }
     try {
         const postagem = await client.query(`
@@ -87,12 +87,17 @@ export async function retrieveAllPostagens(req: Request, res: Response) {
 
 export async function updatePostagem(req: Request, res: Response) {
     const { id } = req.params
-    const { text, likes } = req.body
-    if (!text && !likes || !validaid(id)) {
+    let { title, text, likes } = req.body
+    likes = parseInt(likes)
+    if (!validastring(text) && validastring(likes) && validastring(likes) || !validastring(id)) {
         res.sendStatus(400);
     }
     try {
-        if (likes) {
+        if (likes && title && text && !isNaN(likes)) {
+            await client.query(`
+            UPDATE postagens SET title = '${title}', text = '${text}', likes = ${likes} WHERE id = '${id}'`)
+
+        } else if (!isNaN(likes)) {
             await client.query(`
             UPDATE postagens SET text = '${text}', likes = ${likes} WHERE id = '${id}'`)
         } else {
@@ -111,13 +116,13 @@ export async function updatePostagem(req: Request, res: Response) {
 export async function deletePostagem(req: Request, res: Response) {
     const { id } = req.params
 
-    if (!validaid(id)) {
+    if (!validastring(id)) {
         res.sendStatus(400);
     }
     try {
         await client.query(`
         DELETE FROM postagens WHERE id = '${id}'`)
-        res.sendStatus(200);
+        res.sendStatus(204);
     } catch (err) {
         if (err instanceof Error) {
             console.log(`Erro ao deletar postagem: ${err.message}`)
@@ -129,7 +134,7 @@ export async function deletePostagem(req: Request, res: Response) {
 export async function curtirPostagem(req: Request, res: Response) {
     const { id } = req.params
 
-    if (!validaid(id)) {
+    if (!validastring(id)) {
         res.sendStatus(400);
     }
     try {
@@ -147,12 +152,12 @@ export async function curtirPostagem(req: Request, res: Response) {
 export async function insertComentario(req: Request, res: Response) {
     const { text, postagem_id } = req.body
 
-    if (!validaid(postagem_id)) {
+    if (!validastring(postagem_id) || !text || text === '') {
         res.sendStatus(400);
     }
     try {
         await client.query(`
-        INSERT INTO comentarios (id, text, postagem_id) VALUES ('${uuid()}', '${text}', '${postagem_id}')`)
+        INSERT INTO comentarios (id, text, postagem_id, data_criacao) VALUES ('${uuid()}', '${text}', '${postagem_id}', DEFAULT)`)
         res.sendStatus(201);
     } catch (err) {
         if (err instanceof Error) {
@@ -164,11 +169,8 @@ export async function insertComentario(req: Request, res: Response) {
 
 export async function retrieveComentario(req: Request, res: Response) {
     const { id } = req.params
-    if (!validaid(id)) {
-        res.send({
-            "erro": "id inválido",
-            "StatusCode": "400"
-        });
+    if (!validastring(id)) {
+        res.sendStatus(400);
     }
     try {
         const comentario = await client.query(`
@@ -184,11 +186,8 @@ export async function retrieveComentario(req: Request, res: Response) {
 
 export async function retrieveAllComentariostoPostagem(req: Request, res: Response) {
     const { postagem_id } = req.params
-    if (!validaid(postagem_id)) {
-        res.send({
-            "erro": "id inválido",
-            "StatusCode": "400"
-        });
+    if (!validastring(postagem_id)) {
+        res.sendStatus(400);
     }
 
     try {
@@ -206,7 +205,7 @@ export async function retrieveAllComentariostoPostagem(req: Request, res: Respon
 export async function updateComentario(req: Request, res: Response) {
     const { id } = req.params
     const { text } = req.body
-    if (!text || !validaid(id)) {
+    if (!text || !validastring(id)) {
         res.sendStatus(400);
     }
     try {
@@ -223,14 +222,14 @@ export async function updateComentario(req: Request, res: Response) {
 
 export async function deleteComentario(req: Request, res: Response) {
     const { id } = req.params
-    if (!validaid(id)) {
+    if (!validastring(id)) {
         res.sendStatus(400);
     }
 
     try {
         await client.query(`
         DELETE FROM comentarios WHERE id = '${id}'`)
-        res.sendStatus(200);
+        res.sendStatus(204);
     } catch (err) {
         if (err instanceof Error) {
             console.log(`Erro ao deletar comentario: ${err.message}`)

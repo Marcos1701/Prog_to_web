@@ -1,3 +1,22 @@
+const posts = document.getElementsByClassName('post');
+
+posts.forEach(async (post) => {
+    const postid = post.id
+
+    const btnLike = post.querySelector('#curtir_bnt');
+
+
+    btnLike.onclick = async () => {
+        const response = await fetch(`http://localhost:3000/posts/${postid}/like`, { method: 'POST' })
+        if (response.status == 200) {
+            const likeCount = post.querySelector('#qtd_likes');
+            likeCount.innerText = parseInt(likeCount.innerText) + 1;
+        } else {
+            alert('Erro ao curtir post')
+        }
+    };
+})
+
 const loadPosts = async () => {
     const response = await fetch('http://localhost:3000/posts')
     const posts = await response.json();

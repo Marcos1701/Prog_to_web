@@ -19,8 +19,10 @@ router.get('/posts', retrieveAllPostagens);
 router.get('/posts/:id', retrievePostagem);
 router.post('/posts', insertPostagem);
 router.put('/posts/:id', updatePostagem);
+router.patch('/posts/:id', updatePostagem);
 router.delete('/posts/:id', deletePostagem);
-router.post('/posts/:id/like', curtirPostagem);
+router.patch('/posts/:id/like', curtirPostagem);
+router.post('/posts/:id/like', curtirPostagem)
 router.post('/posts/:id/comentarios', insertComentario);
 router.get('/posts/:id/comentarios', retrieveAllComentariostoPostagem);
 router.get('/posts/:id/comentarios/:id_comentario', retrieveComentario);
