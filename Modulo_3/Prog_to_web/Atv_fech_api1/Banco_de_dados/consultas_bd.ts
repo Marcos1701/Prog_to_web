@@ -12,13 +12,14 @@ const validastring = (id: string) => {
 (async () => {
     try {
         await client.connect()
+
         await client.query(`
-        CREATE OR REPLACE TABLE IF NOT EXISTS postagens (
+        CREATE TABLE IF NOT EXISTS postagens (
          id varchar not null PRIMARY KEY,
          title varchar NOT NULL,
          text varchar NOT NULL,
          likes INT,
-         data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+         data_criacao DATE DEFAULT CURRENT_DATE
         )
     `);
         await client.query(`
@@ -26,7 +27,7 @@ const validastring = (id: string) => {
         id varchar PRIMARY KEY,
         text varchar NOT NULL,
         postagem_id varchar NOT NULL,
-        data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        data_criacao DATE DEFAULT CURRENT_DATE,
         FOREIGN KEY (postagem_id) REFERENCES postagens(id)
     );
     `);
@@ -63,7 +64,7 @@ export async function retrievePostagem(req: Request, res: Response) {
     try {
         const postagem = await client.query(`
         SELECT * FROM postagens WHERE id = '${id}'`)
-        res.send({ "postagem": postagem.rows })
+        res.json({ "postagem": postagem.rows })
     } catch (err) {
         if (err instanceof Error) {
             console.log(`Erro ao buscar postagem: ${err.message}`)
@@ -76,7 +77,7 @@ export async function retrieveAllPostagens(req: Request, res: Response) {
     try {
         const postagens = await client.query(`
         SELECT * FROM postagens`)
-        res.send({ "postagens: ": postagens.rows })
+        res.json({ "postagens: ": postagens.rows })
     } catch (err) {
         if (err instanceof Error) {
             console.log(`Erro ao buscar postagens: ${err.message}`)
@@ -177,7 +178,7 @@ export async function retrieveComentario(req: Request, res: Response) {
     try {
         const comentario = await client.query(`
         SELECT * FROM comentarios WHERE id = '${id}'`)
-        res.send({ "comentario": comentario.rows })
+        res.json({ "comentario": comentario.rows })
     } catch (err) {
         if (err instanceof Error) {
             console.log(`Erro ao buscar comentario: ${err.message}`)
@@ -195,7 +196,7 @@ export async function retrieveAllComentariostoPostagem(req: Request, res: Respon
     try {
         const comentarios = await client.query(`
         SELECT * FROM comentarios WHERE postagem_id = '${postagem_id}'`)
-        res.send({ "comentarios": comentarios.rows })
+        res.json({ "comentarios": comentarios.rows })
     } catch (err) {
         if (err instanceof Error) {
             console.log(`Erro ao buscar comentarios: ${err.message}`)

@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteComentario = exports.updateComentario = exports.retrieveAllComentariostoPostagem = exports.retrieveComentario = exports.insertComentario = exports.curtirPostagem = exports.deletePostagem = exports.updatePostagem = exports.retrieveAllPostagens = exports.retrievePostagem = exports.insertPostagem = void 0;
 const conf_bd_pg_js_1 = require("./conf_bd_pg.js");
 const uuid_1 = require("uuid");
-const validaid = (id) => {
+const validastring = (id) => {
     if (id === '' || id === undefined || id === null) {
         return false;
     }
@@ -15,8 +15,10 @@ const validaid = (id) => {
         await conf_bd_pg_js_1.client.query(`
         CREATE TABLE IF NOT EXISTS postagens (
          id varchar not null PRIMARY KEY,
+         title varchar NOT NULL,
          text varchar NOT NULL,
-         likes INT
+         likes INT,
+         data_criacao DATE DEFAULT CURRENT_DATE
         )
     `);
         await conf_bd_pg_js_1.client.query(`
@@ -24,6 +26,7 @@ const validaid = (id) => {
         id varchar PRIMARY KEY,
         text varchar NOT NULL,
         postagem_id varchar NOT NULL,
+        data_criacao DATE DEFAULT CURRENT_DATE,
         FOREIGN KEY (postagem_id) REFERENCES postagens(id)
     );
     `);
@@ -37,10 +40,10 @@ const validaid = (id) => {
     }
 })();
 async function insertPostagem(req, res) {
-    const { text, likes } = req.body;
+    const { title, text, likes } = req.body;
     try {
         await conf_bd_pg_js_1.client.query(`
-        INSERT INTO postagens (id, text, likes) VALUES ('${(0, uuid_1.v4)()}', '${text}', ${likes})`);
+        INSERT INTO postagens (id,title, text, likes,data_criacao) VALUES ('${(0, uuid_1.v4)()}',${title}, '${text}', ${likes}, DEFAULT)`);
         res.sendStatus(201);
     }
     catch (err) {
@@ -53,16 +56,13 @@ async function insertPostagem(req, res) {
 exports.insertPostagem = insertPostagem;
 async function retrievePostagem(req, res) {
     const { id } = req.params;
-    if (!validaid(id)) {
-        res.send({
-            "erro": "id inválido",
-            "StatusCode": "400"
-        });
+    if (!validastring(id)) {
+        res.sendStatus(400);
     }
     try {
         const postagem = await conf_bd_pg_js_1.client.query(`
         SELECT * FROM postagens WHERE id = '${id}'`);
-        res.send({ "postagem": postagem.rows });
+        res.json({ "postagem": postagem.rows });
     }
     catch (err) {
         if (err instanceof Error) {
@@ -76,7 +76,7 @@ async function retrieveAllPostagens(req, res) {
     try {
         const postagens = await conf_bd_pg_js_1.client.query(`
         SELECT * FROM postagens`);
-        res.send({ "postagens: ": postagens.rows });
+        res.json({ "postagens: ": postagens.rows });
     }
     catch (err) {
         if (err instanceof Error) {
@@ -88,12 +88,17 @@ async function retrieveAllPostagens(req, res) {
 exports.retrieveAllPostagens = retrieveAllPostagens;
 async function updatePostagem(req, res) {
     const { id } = req.params;
-    const { text, likes } = req.body;
-    if (!text && !likes || !validaid(id)) {
+    let { title, text, likes } = req.body;
+    likes = parseInt(likes);
+    if (!validastring(text) && validastring(likes) && validastring(likes) || !validastring(id)) {
         res.sendStatus(400);
     }
     try {
-        if (likes) {
+        if (likes && title && text && !isNaN(likes)) {
+            await conf_bd_pg_js_1.client.query(`
+            UPDATE postagens SET title = '${title}', text = '${text}', likes = ${likes} WHERE id = '${id}'`);
+        }
+        else if (!isNaN(likes)) {
             await conf_bd_pg_js_1.client.query(`
             UPDATE postagens SET text = '${text}', likes = ${likes} WHERE id = '${id}'`);
         }
@@ -113,13 +118,13 @@ async function updatePostagem(req, res) {
 exports.updatePostagem = updatePostagem;
 async function deletePostagem(req, res) {
     const { id } = req.params;
-    if (!validaid(id)) {
+    if (!validastring(id)) {
         res.sendStatus(400);
     }
     try {
         await conf_bd_pg_js_1.client.query(`
         DELETE FROM postagens WHERE id = '${id}'`);
-        res.sendStatus(200);
+        res.sendStatus(204);
     }
     catch (err) {
         if (err instanceof Error) {
@@ -131,13 +136,15 @@ async function deletePostagem(req, res) {
 exports.deletePostagem = deletePostagem;
 async function curtirPostagem(req, res) {
     const { id } = req.params;
-    if (!validaid(id)) {
+    if (!validastring(id)) {
         res.sendStatus(400);
     }
     try {
         await conf_bd_pg_js_1.client.query(`
         UPDATE postagens SET likes = likes + 1 WHERE id = '${id}'`);
-        res.sendStatus(200);
+        const likes = await conf_bd_pg_js_1.client.query(`
+        SELECT likes FROM postagens WHERE id = '${id}'`);
+        res.sendStatus(200).json({ "likes": likes.rows });
     }
     catch (err) {
         if (err instanceof Error) {
@@ -149,12 +156,12 @@ async function curtirPostagem(req, res) {
 exports.curtirPostagem = curtirPostagem;
 async function insertComentario(req, res) {
     const { text, postagem_id } = req.body;
-    if (!validaid(postagem_id)) {
+    if (!validastring(postagem_id) || !text || text === '') {
         res.sendStatus(400);
     }
     try {
         await conf_bd_pg_js_1.client.query(`
-        INSERT INTO comentarios (id, text, postagem_id) VALUES ('${(0, uuid_1.v4)()}', '${text}', '${postagem_id}')`);
+        INSERT INTO comentarios (id, text, postagem_id, data_criacao) VALUES ('${(0, uuid_1.v4)()}', '${text}', '${postagem_id}', DEFAULT)`);
         res.sendStatus(201);
     }
     catch (err) {
@@ -167,16 +174,13 @@ async function insertComentario(req, res) {
 exports.insertComentario = insertComentario;
 async function retrieveComentario(req, res) {
     const { id } = req.params;
-    if (!validaid(id)) {
-        res.send({
-            "erro": "id inválido",
-            "StatusCode": "400"
-        });
+    if (!validastring(id)) {
+        res.sendStatus(400);
     }
     try {
         const comentario = await conf_bd_pg_js_1.client.query(`
         SELECT * FROM comentarios WHERE id = '${id}'`);
-        res.send({ "comentario": comentario.rows });
+        res.json({ "comentario": comentario.rows });
     }
     catch (err) {
         if (err instanceof Error) {
@@ -188,16 +192,13 @@ async function retrieveComentario(req, res) {
 exports.retrieveComentario = retrieveComentario;
 async function retrieveAllComentariostoPostagem(req, res) {
     const { postagem_id } = req.params;
-    if (!validaid(postagem_id)) {
-        res.send({
-            "erro": "id inválido",
-            "StatusCode": "400"
-        });
+    if (!validastring(postagem_id)) {
+        res.sendStatus(400);
     }
     try {
         const comentarios = await conf_bd_pg_js_1.client.query(`
         SELECT * FROM comentarios WHERE postagem_id = '${postagem_id}'`);
-        res.send({ "comentarios": comentarios.rows });
+        res.json({ "comentarios": comentarios.rows });
     }
     catch (err) {
         if (err instanceof Error) {
@@ -210,7 +211,7 @@ exports.retrieveAllComentariostoPostagem = retrieveAllComentariostoPostagem;
 async function updateComentario(req, res) {
     const { id } = req.params;
     const { text } = req.body;
-    if (!text || !validaid(id)) {
+    if (!text || !validastring(id)) {
         res.sendStatus(400);
     }
     try {
@@ -228,13 +229,13 @@ async function updateComentario(req, res) {
 exports.updateComentario = updateComentario;
 async function deleteComentario(req, res) {
     const { id } = req.params;
-    if (!validaid(id)) {
+    if (!validastring(id)) {
         res.sendStatus(400);
     }
     try {
         await conf_bd_pg_js_1.client.query(`
         DELETE FROM comentarios WHERE id = '${id}'`);
-        res.sendStatus(200);
+        res.sendStatus(204);
     }
     catch (err) {
         if (err instanceof Error) {
