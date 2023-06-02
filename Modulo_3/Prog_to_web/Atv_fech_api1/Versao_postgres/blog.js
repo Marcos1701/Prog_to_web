@@ -16,29 +16,23 @@ posts.forEach(async (post) => {
     };
 })
 
-const loadPosts = async () => {
-    const response = await fetch('http://localhost:3000/posts', { method: 'GET' })
-    let posts = await response.json();
+loadPosts = async () => {
+    const response = await fetch('http://localhost:3000/posts');
+    const posts = await response.json();
 
     for (let post of posts) {
-        const response = await fetch(`http://localhost:3000/posts/${post.id}/comentarios`)
-        const comentarios = await response.json();
-        post.comentarios = comentarios.length;
-    }
-
-    posts = posts.sort((a, b) => {
-        a.data_criacao < b.data_criacao ? 1 : -1
-    });
-    posts.forEach(post => {
         appendPost(post);
-    });
+    }
 }
 
-async function addPost() {
+addPost = async () => {
+
+    const postTitle = document.getElementById('post-tile');
+    const postText = document.getElementById('post-text');
 
     const newPost = {
-        "title": document.getElementById('post-tile').value,
-        "text": document.getElementById('post-text').value,
+        "title": postTitle.innerText,
+        "text": postText.innerText,
         "likes": 0
     };
 
@@ -98,6 +92,65 @@ appendPost = (post) => {
 
     document.getElementById('timeline').append(postElement);
 }
+
+// appendPost = (post) => {
+
+//     const postElement = document.createElement('div');
+//     postElement.className = 'post';
+//     postElement.id = post.id;
+
+//     const postTitle = document.createElement('h3');
+//     postTitle.innerText = post.title;
+
+//     const postText = document.createElement('p');
+//     postText.innerText = post.text;
+
+//     const postLikes = document.createElement('p');
+//     postLikes.innerText = `${post.likes} like(s)`;
+
+//     const btnLike = document.createElement('button');
+//     btnLike.innerText = 'Curtir';
+//     btnLike.id = 'curtir_bnt';
+
+//     const btnDelete = document.createElement('button');
+//     btnDelete.innerText = 'Deletar';
+//     btnDelete.id = 'deletar_bnt';
+
+//     const btnUpdate = document.createElement('button');
+//     btnUpdate.innerText = 'Atualizar';
+//     btnUpdate.id = 'atualizar_bnt';
+
+//     const btnComment = document.createElement('button');
+//     btnComment.innerText = 'Comentar';
+//     btnComment.id = 'comentar_bnt';
+
+//     postElement.appendChild(postTitle);
+//     postElement.appendChild(postText);
+//     postElement.appendChild(postLikes);
+//     postElement.appendChild(btnLike);
+//     postElement.appendChild(btnDelete);
+//     postElement.appendChild(btnUpdate);
+//     postElement.appendChild(btnComment);
+
+//     const posts = document.getElementById('timeline');
+//     posts.appendChild(postElement);
+
+//     btnLike.onclick = async () => {
+//         await curtirPost(post.id);
+//     };
+
+//     btnDelete.onclick = async () => {
+//         await deletePost(post.id);
+//     };
+
+//     btnUpdate.onclick = async () => {
+//         await updatepost(post.id);
+//     };
+
+//     btnComment.onclick = async () => {
+//         await addComment(post.id);
+//     };
+// }
 
 deletePost = async (postid) => {
     const config = {
@@ -198,6 +251,7 @@ updateComment = async (postid, commentid) => {
 
 window.onload = () => {
     const btnAddPost = document.getElementById('add-post')
-    btnAddPost.onclick = addPost;
+    btnAddPost.addEventListener('click', addPost)
     loadPosts()
 }
+

@@ -12,14 +12,13 @@ const validastring = (id: string) => {
 (async () => {
     try {
         await client.connect()
-
         await client.query(`
         CREATE TABLE IF NOT EXISTS postagens (
          id varchar not null PRIMARY KEY,
          title varchar NOT NULL,
          text varchar NOT NULL,
          likes INT,
-         data_criacao DATE DEFAULT CURRENT_DATE
+         data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     `);
         await client.query(`
@@ -27,7 +26,7 @@ const validastring = (id: string) => {
         id varchar PRIMARY KEY,
         text varchar NOT NULL,
         postagem_id varchar NOT NULL,
-        data_criacao DATE DEFAULT CURRENT_DATE,
+        data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (postagem_id) REFERENCES postagens(id)
     );
     `);
@@ -41,10 +40,10 @@ const validastring = (id: string) => {
 })();
 
 export async function insertPostagem(req: Request, res: Response) {
-    const { title, text, likes } = req.body
+    const { title, text } = req.body
     try {
         await client.query(`
-        INSERT INTO postagens (id,title, text, likes,data_criacao) VALUES ('${uuid()}',${title}, '${text}', ${likes}, DEFAULT)`)
+        INSERT INTO postagens (id,title, text, likes,data_criacao) VALUES ('${uuid()}',${title}, '${text}', ${0}, DEFAULT)`)
         res.sendStatus(201);
     } catch (err) {
         if (err instanceof Error) {
