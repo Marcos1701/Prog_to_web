@@ -40,10 +40,10 @@ const validastring = (id: string) => {
 })();
 
 export async function insertPostagem(req: Request, res: Response) {
-    const { title, text, likes } = req.body
+    const { title, text } = req.body
     try {
         await client.query(`
-        INSERT INTO postagens (id,title, text, likes,data_criacao) VALUES ('${uuid()}',${title}, '${text}', ${likes}, DEFAULT)`)
+        INSERT INTO postagens (id,title, text, likes,data_criacao) VALUES ('${uuid()}',${title}, '${text}', ${0}, DEFAULT)`)
         res.sendStatus(201);
     } catch (err) {
         if (err instanceof Error) {
@@ -63,7 +63,7 @@ export async function retrievePostagem(req: Request, res: Response) {
     try {
         const postagem = await client.query(`
         SELECT * FROM postagens WHERE id = '${id}'`)
-        res.send({ "postagem": postagem.rows })
+        res.json({ "postagem": postagem.rows })
     } catch (err) {
         if (err instanceof Error) {
             console.log(`Erro ao buscar postagem: ${err.message}`)
@@ -76,7 +76,7 @@ export async function retrieveAllPostagens(req: Request, res: Response) {
     try {
         const postagens = await client.query(`
         SELECT * FROM postagens`)
-        res.send({ "postagens: ": postagens.rows })
+        res.json({ "postagens: ": postagens.rows })
     } catch (err) {
         if (err instanceof Error) {
             console.log(`Erro ao buscar postagens: ${err.message}`)
@@ -177,7 +177,7 @@ export async function retrieveComentario(req: Request, res: Response) {
     try {
         const comentario = await client.query(`
         SELECT * FROM comentarios WHERE id = '${id}'`)
-        res.send({ "comentario": comentario.rows })
+        res.json({ "comentario": comentario.rows })
     } catch (err) {
         if (err instanceof Error) {
             console.log(`Erro ao buscar comentario: ${err.message}`)
@@ -195,7 +195,7 @@ export async function retrieveAllComentariostoPostagem(req: Request, res: Respon
     try {
         const comentarios = await client.query(`
         SELECT * FROM comentarios WHERE postagem_id = '${postagem_id}'`)
-        res.send({ "comentarios": comentarios.rows })
+        res.json({ "comentarios": comentarios.rows })
     } catch (err) {
         if (err instanceof Error) {
             console.log(`Erro ao buscar comentarios: ${err.message}`)

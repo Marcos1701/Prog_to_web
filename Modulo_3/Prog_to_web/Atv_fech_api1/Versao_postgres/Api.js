@@ -4,15 +4,49 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const router_1 = __importDefault(require("./router"));
+const posts_js_1 = require("./posts.js");
+const cors_1 = __importDefault(require("cors"));
 const app = (0, express_1.default)();
-app.use(express_1.default.urlencoded({ extended: true }));
-app.use(express_1.default.static('public'));
+const port = 3000;
+app.use((0, cors_1.default)());
 app.use(express_1.default.json());
-app.use(router_1.default);
-app.use(function (req, res, next) {
-    res.status(404).send('Sorry cant find that!');
+app.get('/posts', (req, res) => {
+    res.json(posts_js_1.posts);
 });
-app.listen(3000, () => {
-    console.log('Servidor rodando na porta 3000');
+app.get('/posts/:id', (req, res) => {
+    const postId = parseInt(req.params.id);
+    const post = posts_js_1.posts.find((p) => p.id == postId);
+    if (!post) {
+        return res.status(404).json({ error: 'Post not found' });
+    }
+    res.json(post);
+});
+app.post('/posts', (req, res) => {
+    const { title, text, date, likes } = req.body;
+    const newPost = { id: posts_js_1.posts.length + 1, title, text, date, likes };
+    posts_js_1.posts.push(newPost);
+    res.status(201).json(newPost);
+});
+app.put('/posts/:id', (req, res) => {
+    const postId = parseInt(req.params.id);
+    const { title, text, date, likes } = req.body;
+    const postIndex = posts_js_1.posts.findIndex((p) => p.id == postId);
+    if (postIndex == -1) {
+        return res.status(404).json({ error: 'Post not found' });
+    }
+    const updatedPost = { id: postId, title, text, date, likes };
+    posts_js_1.posts[postIndex] = updatedPost;
+    res.json(updatedPost);
+});
+app.delete('/posts/:id', (req, res) => {
+    const postId = parseInt(req.params.id);
+    const postIndex = posts_js_1.posts.findIndex((p) => p.id == postId);
+    if (postIndex == -1) {
+        return res.status(404).json({ error: 'Post not found' });
+    }
+    const deletedPost = posts_js_1.posts.splice(postIndex, 1)[0];
+    res.json(deletedPost);
+});
+app.listen(port, () => {
+    console.log(`Server listening on port ${port}`);
 });

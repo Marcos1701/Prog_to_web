@@ -18,7 +18,7 @@ const validastring = (id) => {
          title varchar NOT NULL,
          text varchar NOT NULL,
          likes INT,
-         data_criacao DATE DEFAULT CURRENT_DATE
+         data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     `);
         await conf_bd_pg_js_1.client.query(`
@@ -26,7 +26,7 @@ const validastring = (id) => {
         id varchar PRIMARY KEY,
         text varchar NOT NULL,
         postagem_id varchar NOT NULL,
-        data_criacao DATE DEFAULT CURRENT_DATE,
+        data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (postagem_id) REFERENCES postagens(id)
     );
     `);
@@ -40,10 +40,10 @@ const validastring = (id) => {
     }
 })();
 async function insertPostagem(req, res) {
-    const { title, text, likes } = req.body;
+    const { title, text } = req.body;
     try {
         await conf_bd_pg_js_1.client.query(`
-        INSERT INTO postagens (id,title, text, likes,data_criacao) VALUES ('${(0, uuid_1.v4)()}',${title}, '${text}', ${likes}, DEFAULT)`);
+        INSERT INTO postagens (id,title, text, likes,data_criacao) VALUES ('${(0, uuid_1.v4)()}',${title}, '${text}', ${0}, DEFAULT)`);
         res.sendStatus(201);
     }
     catch (err) {
