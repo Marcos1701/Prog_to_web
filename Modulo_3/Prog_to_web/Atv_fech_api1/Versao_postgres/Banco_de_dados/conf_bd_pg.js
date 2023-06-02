@@ -1,0 +1,15 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.client = void 0;
+const pg_1 = __importDefault(require("pg"));
+const client = new pg_1.default.Client({
+    host: 'localhost',
+    port: 5432,
+    user: 'postgres',
+    password: 'postgres',
+    database: 'db_atv_fech_api1'
+});
+exports.client = client;
