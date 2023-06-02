@@ -10,6 +10,7 @@
     "firebase": "^9.22.1",
     "firestore-wrapper": "^0.1.8",
     "pg": "^8.11.0",
+    "postgres": "^3.3.4",
     "prompt-sync": "^4.2.0",
     "railway": "^2.0.17",
     "sqlite": "^4.2.1",
