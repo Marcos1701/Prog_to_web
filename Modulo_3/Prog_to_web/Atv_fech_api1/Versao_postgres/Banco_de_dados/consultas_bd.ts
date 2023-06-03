@@ -40,10 +40,10 @@ const validastring = (id: string) => {
 })();
 
 export async function insertPostagem(req: Request, res: Response) {
-    const { title, text } = req.body
+    const { title, text, like } = req.body
     try {
         await client.query(`
-        INSERT INTO postagens (id,title, text, likes,data_criacao) VALUES ('${uuid()}',${title}, '${text}', ${0}, DEFAULT)`)
+        INSERT INTO postagens (id,title, text, likes,data_criacao) VALUES ('${uuid()}',${title}, '${text}',${like} , DEFAULT)`)
         res.sendStatus(201);
     } catch (err) {
         if (err instanceof Error) {
@@ -76,7 +76,7 @@ export async function retrieveAllPostagens(req: Request, res: Response) {
     try {
         const postagens = await client.query(`
         SELECT * FROM postagens`)
-        res.json({ "postagens: ": postagens.rows })
+        res.json({ "postagens": postagens.rows })
     } catch (err) {
         if (err instanceof Error) {
             console.log(`Erro ao buscar postagens: ${err.message}`)
@@ -152,14 +152,15 @@ export async function curtirPostagem(req: Request, res: Response) {
 }
 
 export async function insertComentario(req: Request, res: Response) {
-    const { text, postagem_id } = req.body
+    const { id } = req.params
+    const { text } = req.body
 
-    if (!validastring(postagem_id) || !text || text === '') {
+    if (!validastring(id) || !text || text === '') {
         res.sendStatus(400);
     }
     try {
         await client.query(`
-        INSERT INTO comentarios (id, text, postagem_id, data_criacao) VALUES ('${uuid()}', '${text}', '${postagem_id}', DEFAULT)`)
+        INSERT INTO comentarios (id, text, postagem_id, data_criacao) VALUES ('${uuid()}', '${text}', '${id}', DEFAULT)`)
         res.sendStatus(201);
     } catch (err) {
         if (err instanceof Error) {
@@ -170,14 +171,16 @@ export async function insertComentario(req: Request, res: Response) {
 }
 
 export async function retrieveComentario(req: Request, res: Response) {
-    const { id } = req.params
-    if (!validastring(id)) {
+    const { id, id_comentario } = req.params
+    if (!validastring(id) || !validastring(id_comentario)) {
         res.sendStatus(400);
     }
     try {
-        const comentario = await client.query(`
-        SELECT * FROM comentarios WHERE id = '${id}'`)
-        res.json({ "comentario": comentario.rows })
+        await client.query(`
+        SELECT * FROM comentarios WHERE id = '${id_comentario} and postagem_id = '${id}'`)
+            .then((comentario) => {
+                res.json({ "comentario": comentario.rows })
+            })
     } catch (err) {
         if (err instanceof Error) {
             console.log(`Erro ao buscar comentario: ${err.message}`)
@@ -187,15 +190,17 @@ export async function retrieveComentario(req: Request, res: Response) {
 }
 
 export async function retrieveAllComentariostoPostagem(req: Request, res: Response) {
-    const { postagem_id } = req.params
-    if (!validastring(postagem_id)) {
+    const { id } = req.params
+    if (!validastring(id)) {
         res.sendStatus(400);
     }
 
     try {
-        const comentarios = await client.query(`
-        SELECT * FROM comentarios WHERE postagem_id = '${postagem_id}'`)
-        res.json({ "comentarios": comentarios.rows })
+        await client.query(`
+        SELECT * FROM comentarios WHERE postagem_id = '${id}'`)
+            .then((comentarios) => {
+                res.json({ "comentarios": comentarios.rows })
+            })
     } catch (err) {
         if (err instanceof Error) {
             console.log(`Erro ao buscar comentarios: ${err.message}`)
@@ -205,14 +210,14 @@ export async function retrieveAllComentariostoPostagem(req: Request, res: Respon
 }
 
 export async function updateComentario(req: Request, res: Response) {
-    const { id } = req.params
+    const { id, id_comentario } = req.params
     const { text } = req.body
-    if (!text || !validastring(id)) {
+    if (!text || !validastring(id_comentario) || !validastring(id)) {
         res.sendStatus(400);
     }
     try {
         await client.query(`
-        UPDATE comentarios SET text = '${text}' WHERE id = '${id}'`)
+        UPDATE comentarios SET text = '${text}' WHERE id = '${id_comentario} and postagem_id = '${id}'`)
         res.sendStatus(200);
     } catch (err) {
         if (err instanceof Error) {
@@ -223,14 +228,14 @@ export async function updateComentario(req: Request, res: Response) {
 }
 
 export async function deleteComentario(req: Request, res: Response) {
-    const { id } = req.params
-    if (!validastring(id)) {
+    const { id, id_comentario } = req.params
+    if (!validastring(id_comentario) || !validastring(id)) {
         res.sendStatus(400);
     }
 
     try {
         await client.query(`
-        DELETE FROM comentarios WHERE id = '${id}'`)
+        DELETE FROM comentarios WHERE id = '${id_comentario} and postagem_id = '${id}'`)
         res.sendStatus(204);
     } catch (err) {
         if (err instanceof Error) {
