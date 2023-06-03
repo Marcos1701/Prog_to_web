@@ -1,56 +1,52 @@
-import express, { Request, Response } from 'express';
-import { posts, Post } from './posts.js';
-import cors from 'cors';
+import express, { Application, Request, Response } from 'express';
+// import router from './router';
 
-const app = express();
-const port = 3000;
-app.use(cors());
+import {
+  insertPostagem, retrievePostagem, retrieveAllPostagens, curtirPostagem,
+  updatePostagem, deletePostagem, retrieveAllComentariostoPostagem, retrieveComentario,
+  insertComentario, updateComentario, deleteComentario
+} from './Banco_de_dados/consultas_bd.js'
 
-app.use(express.json());
+const app: Application = express();
 
-app.get('/posts', (req: Request, res: Response) => {
-  res.json(posts);
+app.use(express.urlencoded({ extended: true }))
+app.use(express.static('public'));
+app.use(express.json())
+// app.use(router);
+
+app.get('/', (req: Request, res: Response) => {
+  res.send('Bem vindo ao microblog!!')
 });
 
-app.get('/posts/:id', (req: Request, res: Response) => {
-  const postId: number = parseInt(req.params.id);
-  const post: Post | undefined = posts.find((p) => p.id == postId);
-  if (!post) {
-    return res.status(404).json({ error: 'Post not found' });
-  }
-  res.json(post);
+app.get('/posts', retrieveAllPostagens, (req: Request, res: Response) => {
+  console.log("cheguei aqui")
+  res.send(res.locals.postagens);
+});
+app.get('/posts/:id', retrievePostagem, (req: Request, res: Response) => {
+  console.log("cheguei aqui")
+  res.send(res.locals.postagem);
+});
+app.post('/posts', insertPostagem, (req: Request, res: Response) => {
+  console.log("cheguei aqui")
+  res.send(res.locals.postagem);
+});
+app.put('/posts/:id', updatePostagem);
+app.patch('/posts/:id', updatePostagem);
+app.delete('/posts/:id', deletePostagem);
+app.patch('/posts/:id/like', curtirPostagem);
+app.post('/posts/:id/like', curtirPostagem)
+app.post('/posts/:id/comentarios', insertComentario);
+app.get('/posts/:id/comentarios', retrieveAllComentariostoPostagem);
+app.get('/posts/:id/comentarios/:id_comentario', retrieveComentario);
+app.put('/posts/:id/comentarios/:id_comentario', updateComentario);
+app.delete('/posts/:id/comentarios/:id_comentario', deleteComentario);
+
+
+
+app.use(function (req: Request, res: Response, next: Function) {
+  res.status(404).send('Sorry cant find that!');
 });
 
-app.post('/posts', (req: Request, res: Response) => {
-  const { title, text, date, likes }: Post = req.body;
-  const newPost: Post = { id: posts.length + 1, title, text, date, likes };
-  posts.push(newPost);
-  res.status(201).json(newPost);
-});
-
-app.put('/posts/:id', (req: Request, res: Response) => {
-  const postId: number = parseInt(req.params.id);
-  const { title, text, date, likes }: Post = req.body;
-  const postIndex: number = posts.findIndex((p) => p.id == postId);
-  if (postIndex == -1) {
-    return res.status(404).json({ error: 'Post not found' });
-  }
-  const updatedPost: Post = { id: postId, title, text, date, likes };
-  posts[postIndex] = updatedPost;
-  res.json(updatedPost);
-});
-
-
-app.delete('/posts/:id', (req: Request, res: Response) => {
-  const postId: number = parseInt(req.params.id);
-  const postIndex: number = posts.findIndex((p) => p.id == postId);
-  if (postIndex == -1) {
-    return res.status(404).json({ error: 'Post not found' });
-  }
-  const deletedPost: Post = posts.splice(postIndex, 1)[0];
-  res.json(deletedPost);
-});
-
-app.listen(port, () => {
-  console.log(`Server listening on port ${port}`);
+app.listen(3000, () => {
+  console.log('Servidor rodando na porta 3000');
 });
