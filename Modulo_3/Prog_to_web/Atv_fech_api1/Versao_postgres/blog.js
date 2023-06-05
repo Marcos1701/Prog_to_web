@@ -186,9 +186,9 @@ const loadPosts = async () => {
     };
     const response = await fetch('https://express-server-production-d5bc.up.railway.app/posts', config);
     let retorno = await response.json();
-    const {postagens} = retorno
+    const posts = Object.keys(json).map(i => JSON.parse(json[Number(i)]));
     
-    for (let post of postagens) {
+    for (let post of posts) {
         console.log(post)
         appendPost(post);
     }
