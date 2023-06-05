@@ -19,15 +19,15 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 app.get('/posts', retrieveAllPostagens, (req: Request, res: Response) => {
-  console.log("cheguei aqui")
+  // console.log("cheguei aqui")
   res.send(res.locals.postagens);
 });
 app.get('/posts/:id', retrievePostagem, (req: Request, res: Response) => {
-  console.log("cheguei aqui")
+  // console.log("cheguei aqui")
   res.send(res.locals.postagem);
 });
 app.post('/posts', insertPostagem, (req: Request, res: Response) => {
-  console.log("cheguei aqui")
+  // console.log("cheguei aqui")
   res.send(res.locals.postagem);
 });
 app.put('/posts/:id', updatePostagem);

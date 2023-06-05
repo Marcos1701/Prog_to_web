@@ -5,9 +5,10 @@ const curtirPost = async (postid) => {
             'Content-Type': 'application/json'
         }
     };
-    await fetch(`http://localhost:3000/posts/${postid}/like`, config)
+    await fetch(`https://express-server-production-d5bc.up.railway.app/posts/${postid}/like`, config)
         .then(response => response.json())
-        .then(post => {
+        .then(retorno => {
+            const post = retorno.postagem;
             if (response.status == 200) {
                 const postElement = document.getElementById(postid);
                 const postLikes = postElement.querySelectorAll('p')[1]
@@ -69,9 +70,11 @@ const updatepost = async (postid) => {
         body: JSON.stringify(newPost)
     };
 
-    await fetch(`http://localhost:3000/posts/${postid}`, config)
+    await fetch(`https://express-server-production-d5bc.up.railway.app/posts/${postid}`, config)
         .then(response => response.json())
-        .then(post => {
+        .then(retorno => {
+            const post = retorno.postagem;
+
             if (response.status == 200) {
                 postTitle.innerText = post.title;
                 postText.innerText = post.text;
@@ -85,9 +88,10 @@ const updatepost = async (postid) => {
 const addComment = async (postid) => {
     const postElement = document.getElementById(postid);
     const commentText = postElement.querySelector('new_comment_text');
+    const text = commentText.innerText
 
     const newComment = {
-        "text": commentText.innerText
+        "text": text
     };
 
     const config = {
@@ -98,15 +102,17 @@ const addComment = async (postid) => {
         body: JSON.stringify(newComment)
     };
 
-    await fetch(`http://localhost:3000/posts/${postid}/comentarios`, config)
+    await fetch(`https://express-server-production-d5bc.up.railway.app/posts/${postid}/comentarios`, config)
         .then(response => response.json())
-        .then(post => {
+        .then(retorno => {
+            const id = retorno.id;
+
             if (response.status == 201) {
                 const comentariosdiv = postElement.querySelectorAll('div')[0]
                 const comentarioElement = document.createElement('p');
-                comentarioElement.innerText = post.text;
+                comentarioElement.innerText = text;
                 comentarioElement.className = 'comentario';
-                comentarioElement.id = post.id;
+                comentarioElement.id = id;
                 comentariosdiv.append(comentarioElement);
             } else {
                 alert('Erro ao adicionar comentario')
@@ -132,12 +138,13 @@ const updateComment = async (postid, commentid) => {
         body: JSON.stringify(newComment)
     };
 
-    await fetch(`/posts/${postid}/comentarios/${commentid}`, config)
+    await fetch(`https://express-server-production-d5bc.up.railway.app/posts/${postid}/comentarios/${commentid}`, config)
         .then(response => response.json())
-        .then(post => {
+        .then(retorno => {
+            const comment = retorno.comentario;
             if (response.status == 200) {
                 const comentarioElement = document.getElementById(commentid);
-                comentarioElement.innerText = post.text;
+                comentarioElement.innerText = comment.text;
             } else {
                 alert('Erro ao atualizar comentario')
             }
@@ -152,7 +159,7 @@ const deleteComment = async (postid, commentid) => {
         }
     };
 
-    await fetch(`/posts/${postid}/comentarios/${commentid}`, config)
+    await fetch(`https://express-server-production-d5bc.up.railway.app/posts/${postid}/comentarios/${commentid}`, config)
         .then(response => {
             if (response.status == 204) {
                 const comentarioElement = document.getElementById(commentid);
@@ -165,22 +172,37 @@ const deleteComment = async (postid, commentid) => {
 
 
 const loadPosts = async () => {
-    await fetch('http://localhost:3000/posts')
-        .then(response => response.json())
-        .then(posts => {
-            for (let post of posts) {
-                appendPost(post);
-            }
-        });
+    /*blog.js:26  Uncaught (in promise) TypeError: Cannot set properties of null (setting 'id')
+    at appendPost (blog.js:26:43)
+    at blog.js:182:17
+    at async loadPosts (blog.js:175:5)
+    at async window.onload (blog.js:294:5) */
+
+    const config = {
+        'method': 'GET',
+        'headers': {
+            'Content-Type': 'application/json'
+        }
+    };
+    const response = await fetch('https://express-server-production-d5bc.up.railway.app/posts', config);
+    let posts = await response.json();
+    posts = posts.postagens
+    console.log(posts);
+
+    for (let post of posts) {
+        appendPost(post);
+    }
 }
 
 const addPost = async () => {
     const postTitle = document.getElementById('new_post_title');
     const postText = document.getElementById('new_post_text');
+    const title = postTitle.value
+    const text = postText.value
 
     const newPost = {
-        "title": postTitle.value,
-        "text": postText.value,
+        "title": title,
+        "text": text,
         "likes": 0
     };
 
@@ -192,81 +214,23 @@ const addPost = async () => {
         body: JSON.stringify(newPost)
     };
 
-    await fetch('http://localhost:3000/posts', config)
+    await fetch('https://express-server-production-d5bc.up.railway.app/posts', config)
         .then(response => response.json())
-        .then(post => {
-            if (response.status == 201) {
+        .then(retorno => {
+            const id = retorno.id;
+            if (response.status == 201 && id) {
+                const post = {
+                    "id": id,
+                    "title": title,
+                    "text": text,
+                    "likes": 0
+                };
                 appendPost(post);
             } else {
                 alert('Erro ao adicionar post')
             }
         });
 }
-
-// const appendPost = (post) => {
-//     const postElement = document.createElement('div');
-//     postElement.className = 'post';
-//     postElement.id = post.id;
-
-//     const postTitle = document.createElement('h3');
-//     postTitle.innerText = post.title;
-//     postTitle.contentEditable = true;
-//     postTitle.addEventListener('blur', () => updatepost(post.id));
-//     postElement.append(postTitle);
-
-//     const postText = document.createElement('p');
-//     postText.innerText = post.text;
-//     postText.contentEditable = true;
-//     postText.addEventListener('blur', () => updatepost(post.id));
-//     postElement.append(postText);
-
-//     const postLikes = document.createElement('p');
-//     postLikes.innerText = post.likes + " like(s)";
-//     postElement.append(postLikes);
-
-//     const btnLike = document.createElement('button');
-//     btnLike.innerText = 'Like';
-//     btnLike.addEventListener('click', () => likePost(post.id));
-//     postElement.append(btnLike);
-
-//     const btnDelete = document.createElement('button');
-//     btnDelete.innerText = 'Delete';
-//     btnDelete.addEventListener('click', () => deletePost(post.id));
-//     postElement.append(btnDelete);
-
-//     const comentariosdiv = document.createElement('div');
-//     comentariosdiv.className = 'comentarios';
-//     postElement.append(comentariosdiv);
-
-//     const newCommentText = document.createElement('p');
-//     newCommentText.innerText = 'New comment';
-//     newCommentText.contentEditable = true;
-//     comentariosdiv.append(newCommentText);
-
-//     const btnAddComment = document.createElement('button');
-//     btnAddComment.innerText = 'Add comment';
-//     btnAddComment.addEventListener('click', () => addComment(post.id));
-//     comentariosdiv.append(btnAddComment);
-
-//     for (let comment of post.comentarios) {
-//         const comentarioElement = document.createElement('p');
-//         comentarioElement.innerText = comment.text;
-//         comentarioElement.className = 'comentario';
-//         comentarioElement.id = comment.id;
-//         comentarioElement.contentEditable = true;
-//         comentarioElement.addEventListener('blur', () => updateComment(post.id, comment.id));
-//         comentariosdiv.append(comentarioElement);
-
-//         const btnDeleteComment = document.createElement('button');
-//         btnDeleteComment.innerText = 'Delete';
-//         btnDeleteComment.addEventListener('click', () => deleteComment(post.id, comment.id));
-//         comentariosdiv.append(btnDeleteComment);
-//     }
-
-//     const postsdiv = document.getElementById('posts');
-//     postsdiv.append(postElement);
-
-// }
 
 const updatePost = async (postid) => {
     const postElement = document.getElementById(postid);
@@ -286,9 +250,10 @@ const updatePost = async (postid) => {
         body: JSON.stringify(newPost)
     };
 
-    await fetch(`http://localhost:3000/posts/${postid}`, config)
+    await fetch(`https://express-server-production-d5bc.up.railway.app/posts/${postid}`, config)
         .then(response => response.json())
-        .then(post => {
+        .then(retorno => {
+            const post = retorno.postagem;
             if (response.status == 200) {
                 postTitle.innerText = post.title;
                 postText.innerText = post.text;
@@ -302,7 +267,7 @@ const likePost = async (postid) => {
     const postElement = document.getElementById(postid);
     const postLikes = postElement.querySelectorAll('p')[1]
 
-    await fetch(`http://localhost:3000/posts/${postid}/likes`)
+    await fetch(`https://express-server-production-d5bc.up.railway.app/posts/${postid}/likes`)
         .then(response => response.json())
         .then(likes => {
             if (response.status == 200) {
@@ -322,7 +287,7 @@ const deletePost = async (postid) => {
         }
     };
 
-    await fetch(`http://localhost:3000/posts/${postid}`, config)
+    await fetch(`https://express-server-production-d5bc.up.railway.app/posts/${postid}`, config)
         .then(response => {
             if (response.status == 204) {
                 const postElement = document.getElementById(postid);
@@ -333,8 +298,8 @@ const deletePost = async (postid) => {
         });
 }
 
-window.onload = async () => {
+window.onload = () => {
     const btnAddPost = document.getElementById('add_post')
     btnAddPost.addEventListener('click', addPost)
-    await loadPosts()
+    loadPosts()
 }
