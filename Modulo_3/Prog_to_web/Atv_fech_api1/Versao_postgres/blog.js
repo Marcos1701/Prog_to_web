@@ -21,6 +21,8 @@ const curtirPost = async (postid) => {
 
 
 const appendPost = (post) => {
+    console.log(post);
+    console.log(post.id);
     const template = document.getElementById('post_template');
     const postElement = document.importNode(template.content, true);
     postElement.getElementById('post').setAttribute("id", post.id);
