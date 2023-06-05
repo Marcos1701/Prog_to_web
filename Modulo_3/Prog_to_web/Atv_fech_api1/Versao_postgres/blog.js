@@ -1,27 +1,70 @@
-const curtirPost = async (postid) => {
+const posts = document.getElementsByClassName('post');
+
+posts.forEach(async (post) => {
+    const postid = post.id
+
+    const btnLike = post.querySelector('#curtir_bnt');
+    const bntcomentar = post.querySelector('#comentar_bnt');
+
+
+    btnLike.onclick = async () => {
+        await curtirPost(postid);
+    };
+
+    bntcomentar.onclick = async () => {
+        await addComment(postid);
+    };
+})
+
+loadPosts = async () => {
+    const response = await fetch('http://localhost:3000/posts');
+    const posts = await response.json();
+
+    for (let post of Array.from(posts)) {
+        appendPost(post);
+    }
+}
+
+addPost = async () => {
+
+    const postTitle = document.getElementById('post-tile');
+    const postText = document.getElementById('post-text');
+
+    const newPost = {
+        "title": postTitle.innerText,
+        "text": postText.innerText,
+        "likes": 0
+    };
+
     const config = {
         'method': 'POST',
         'headers': {
             'Content-Type': 'application/json'
-        }
+        },
+        body: JSON.stringify(newPost)
     };
-    await fetch(`https://express-server-production-d5bc.up.railway.app/posts/${postid}/like`, config)
-        .then(response => response.json())
-        .then(retorno => {
-            const post = retorno.postagem;
-            if (response.status == 200) {
-                const postElement = document.getElementById(postid);
-                const postLikes = postElement.querySelectorAll('p')[1]
-                postLikes.innerText = post.likes + " like(s)";
-            } else {
-                alert('Erro ao curtir post')
-            }
-        })
+
+    const response = await fetch('http://localhost:3000/posts', config);
+    const post = await response.json();
+
+    appendPost(post);
+}
+
+curtirPost = async (postid) => {
+    const response = await fetch(`http://localhost:3000/posts/${postid}/like`, { method: 'POST' })
+    if (response.status == 200) {
+        const { likes } = await response.json();
+        const post = document.getElementById(postid);
+        const postItens = post.querySelectorAll('p')
+        postItens[1].innerText = `${parseInt(likes) + 1} like(s)`;
+    } else {
+        alert('Erro ao curtir post')
+    }
 }
 
 
-const appendPost = (post) => {
-    const template = document.getElementById('post_template');
+appendPost = (post) => {
+    const template = document.getElementById('post-template');
     const postElement = document.importNode(template.content, true);
     postElement.getElementById('post').id = post.id;
 
@@ -32,7 +75,7 @@ const appendPost = (post) => {
     postItens[1].innerText = post.likes + " like(s)";
 
     const comentarios = post.comentarios.sort((a, b) => {
-        return a.data_criacao < b.data_criacao ? 1 : -1;
+        a.data_criacao < b.data_criacao ? 1 : -1
     });
 
     const comentariosdiv = postElement.querySelectorAll('div')[0]
@@ -50,13 +93,92 @@ const appendPost = (post) => {
     document.getElementById('timeline').append(postElement);
 }
 
+// appendPost = (post) => {
 
-const updatepost = async (postid) => {
+//     const postElement = document.createElement('div');
+//     postElement.className = 'post';
+//     postElement.id = post.id;
+
+//     const postTitle = document.createElement('h3');
+//     postTitle.innerText = post.title;
+
+//     const postText = document.createElement('p');
+//     postText.innerText = post.text;
+
+//     const postLikes = document.createElement('p');
+//     postLikes.innerText = `${post.likes} like(s)`;
+
+//     const btnLike = document.createElement('button');
+//     btnLike.innerText = 'Curtir';
+//     btnLike.id = 'curtir_bnt';
+
+//     const btnDelete = document.createElement('button');
+//     btnDelete.innerText = 'Deletar';
+//     btnDelete.id = 'deletar_bnt';
+
+//     const btnUpdate = document.createElement('button');
+//     btnUpdate.innerText = 'Atualizar';
+//     btnUpdate.id = 'atualizar_bnt';
+
+//     const btnComment = document.createElement('button');
+//     btnComment.innerText = 'Comentar';
+//     btnComment.id = 'comentar_bnt';
+
+//     postElement.appendChild(postTitle);
+//     postElement.appendChild(postText);
+//     postElement.appendChild(postLikes);
+//     postElement.appendChild(btnLike);
+//     postElement.appendChild(btnDelete);
+//     postElement.appendChild(btnUpdate);
+//     postElement.appendChild(btnComment);
+
+//     const posts = document.getElementById('timeline');
+//     posts.appendChild(postElement);
+
+//     btnLike.onclick = async () => {
+//         await curtirPost(post.id);
+//     };
+
+//     btnDelete.onclick = async () => {
+//         await deletePost(post.id);
+//     };
+
+//     btnUpdate.onclick = async () => {
+//         await updatepost(post.id);
+//     };
+
+//     btnComment.onclick = async () => {
+//         await addComment(post.id);
+//     };
+// }
+
+deletePost = async (postid) => {
+    const config = {
+        'method': 'DELETE',
+        'headers': {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ "id": postid })
+    };
+
+    const response = await fetch(`http://localhost:3000/posts/:id`, config);
+
+    if (response.status == 204) {
+        const postElement = document.getElementById(postid);
+        postElement.remove();
+    } else {
+        alert('Erro ao deletar post')
+    }
+}
+
+
+updatepost = async (postid) => {
     const postElement = document.getElementById(postid);
     const postTitle = postElement.querySelectorAll('h3')[0]
     const postText = postElement.querySelectorAll('p')[0]
 
     const newPost = {
+        "id": postid,
         "title": postTitle.innerText,
         "text": postText.innerText,
         "likes": 0
@@ -70,28 +192,21 @@ const updatepost = async (postid) => {
         body: JSON.stringify(newPost)
     };
 
-    await fetch(`https://express-server-production-d5bc.up.railway.app/posts/${postid}`, config)
-        .then(response => response.json())
-        .then(retorno => {
-            const post = retorno.postagem;
+    const response = await fetch(`http://localhost:3000/posts/:id`, config);
+    const post = await response.json();
 
-            if (response.status == 200) {
-                postTitle.innerText = post.title;
-                postText.innerText = post.text;
-            } else {
-                alert('Erro ao atualizar post')
-            }
-        });
+    postTitle.innerText = post.title;
+    postText.innerText = post.text;
 }
 
 
-const addComment = async (postid) => {
+addComment = async (postid) => {
     const postElement = document.getElementById(postid);
-    const commentText = postElement.querySelector('new_comment_text');
-    const text = commentText.innerText
+    const commentText = postElement.getElementById('new_comment_text');
 
     const newComment = {
-        "text": text
+        "id": postid,
+        "text": commentText.innerText
     };
 
     const config = {
@@ -102,31 +217,20 @@ const addComment = async (postid) => {
         body: JSON.stringify(newComment)
     };
 
-    await fetch(`https://express-server-production-d5bc.up.railway.app/posts/${postid}/comentarios`, config)
-        .then(response => response.json())
-        .then(retorno => {
-            const id = retorno.id;
+    const response = await fetch(`http://localhost:3000/posts/:id/comment`, config);
+    const post = await response.json();
 
-            if (response.status == 201) {
-                const comentariosdiv = postElement.querySelectorAll('div')[0]
-                const comentarioElement = document.createElement('p');
-                comentarioElement.innerText = text;
-                comentarioElement.className = 'comentario';
-                comentarioElement.id = id;
-                comentariosdiv.append(comentarioElement);
-            } else {
-                alert('Erro ao adicionar comentario')
-            }
-        });
-
+    postText.innerText = post.text;
 }
 
 
-const updateComment = async (postid, commentid) => {
+updateComment = async (postid, commentid) => {
     const postElement = document.getElementById(postid);
     const postText = postElement.querySelectorAll('p')[0]
 
     const newComment = {
+        "id": postid,
+        "id_do_comentario": commentid,
         "text": postText.innerText
     };
 
@@ -138,168 +242,16 @@ const updateComment = async (postid, commentid) => {
         body: JSON.stringify(newComment)
     };
 
-    await fetch(`https://express-server-production-d5bc.up.railway.app/posts/${postid}/comentarios/${commentid}`, config)
-        .then(response => response.json())
-        .then(retorno => {
-            const comment = retorno.comentario;
-            if (response.status == 200) {
-                const comentarioElement = document.getElementById(commentid);
-                comentarioElement.innerText = comment.text;
-            } else {
-                alert('Erro ao atualizar comentario')
-            }
-        });
+    const response = await fetch(`/posts/:id/comentarios/:id_comentario`, config);
+    const post = await response.json();
+
+    postText.innerText = post.text;
 }
 
-const deleteComment = async (postid, commentid) => {
-    const config = {
-        'method': 'DELETE',
-        'headers': {
-            'Content-Type': 'application/json'
-        }
-    };
-
-    await fetch(`https://express-server-production-d5bc.up.railway.app/posts/${postid}/comentarios/${commentid}`, config)
-        .then(response => {
-            if (response.status == 204) {
-                const comentarioElement = document.getElementById(commentid);
-                comentarioElement.remove();
-            } else {
-                alert('Erro ao deletar comentario')
-            }
-        });
-}
-
-
-const loadPosts = async () => {
-    /*blog.js:26  Uncaught (in promise) TypeError: Cannot set properties of null (setting 'id')
-    at appendPost (blog.js:26:43)
-    at blog.js:182:17
-    at async loadPosts (blog.js:175:5)
-    at async window.onload (blog.js:294:5) */
-
-    const config = {
-        'method': 'GET',
-        'headers': {
-            'Content-Type': 'application/json'
-        }
-    };
-    const response = await fetch('https://express-server-production-d5bc.up.railway.app/posts', config);
-    let posts = await response.json();
-    posts = posts.postagens
-    console.log(posts);
-
-    for (let post of posts) {
-        appendPost(post);
-    }
-}
-
-const addPost = async () => {
-    const postTitle = document.getElementById('new_post_title');
-    const postText = document.getElementById('new_post_text');
-    const title = postTitle.value
-    const text = postText.value
-
-    const newPost = {
-        "title": title,
-        "text": text,
-        "likes": 0
-    };
-
-    const config = {
-        'method': 'POST',
-        'headers': {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(newPost)
-    };
-
-    await fetch('https://express-server-production-d5bc.up.railway.app/posts', config)
-        .then(response => response.json())
-        .then(retorno => {
-            const id = retorno.id;
-            if (response.status == 201 && id) {
-                const post = {
-                    "id": id,
-                    "title": title,
-                    "text": text,
-                    "likes": 0
-                };
-                appendPost(post);
-            } else {
-                alert('Erro ao adicionar post')
-            }
-        });
-}
-
-const updatePost = async (postid) => {
-    const postElement = document.getElementById(postid);
-    const postTitle = postElement.querySelectorAll('h3')[0]
-    const postText = postElement.querySelectorAll('p')[0]
-
-    const newPost = {
-        "title": postTitle.innerText,
-        "text": postText.innerText
-    };
-
-    const config = {
-        'method': 'PUT',
-        'headers': {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(newPost)
-    };
-
-    await fetch(`https://express-server-production-d5bc.up.railway.app/posts/${postid}`, config)
-        .then(response => response.json())
-        .then(retorno => {
-            const post = retorno.postagem;
-            if (response.status == 200) {
-                postTitle.innerText = post.title;
-                postText.innerText = post.text;
-            } else {
-                alert('Erro ao atualizar post')
-            }
-        });
-}
-
-const likePost = async (postid) => {
-    const postElement = document.getElementById(postid);
-    const postLikes = postElement.querySelectorAll('p')[1]
-
-    await fetch(`https://express-server-production-d5bc.up.railway.app/posts/${postid}/likes`)
-        .then(response => response.json())
-        .then(likes => {
-            if (response.status == 200) {
-                postLikes.innerText = likes + " like(s)";
-            } else {
-                alert('Erro ao atualizar post')
-            }
-        });
-}
-
-
-const deletePost = async (postid) => {
-    const config = {
-        'method': 'DELETE',
-        'headers': {
-            'Content-Type': 'application/json'
-        }
-    };
-
-    await fetch(`https://express-server-production-d5bc.up.railway.app/posts/${postid}`, config)
-        .then(response => {
-            if (response.status == 204) {
-                const postElement = document.getElementById(postid);
-                postElement.remove();
-            } else {
-                alert('Erro ao deletar post')
-            }
-        });
-}
 
 window.onload = () => {
-    const btnAddPost = document.getElementById('add_post')
+    const btnAddPost = document.getElementById('add-post')
     btnAddPost.addEventListener('click', addPost)
     loadPosts()
 }
+
