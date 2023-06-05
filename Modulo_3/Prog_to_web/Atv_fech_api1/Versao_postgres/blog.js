@@ -189,7 +189,7 @@ const loadPosts = async () => {
     posts = posts.postagens
     console.log(posts);
 
-    for (let post of posts) {
+    for (let post of Array.from(posts)) {
         appendPost(post);
     }
 }
