@@ -188,6 +188,7 @@ const loadPosts = async () => {
     let retorno = await response.json();
     const {postagens} = retorno
     console.log(postagens);
+    console.log(Array.from(postagens));
 
     for (let post of postagens) {
         appendPost(post);
