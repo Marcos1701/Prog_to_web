@@ -23,7 +23,7 @@ const curtirPost = async (postid) => {
 const appendPost = (post) => {
     const template = document.getElementById('post_template');
     const postElement = document.importNode(template.content, true);
-    postElement.getElementById('post').id = post.id;
+    postElement.getElementById('post').setAttribute("id", post.id);
 
     const postTitle = postElement.querySelectorAll('h3')[0]
     postTitle.innerText = post.title;
