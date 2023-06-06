@@ -188,7 +188,7 @@ const loadPosts = async () => {
     };
     const response = await fetch('https://express-server-production-d5bc.up.railway.app/posts', config);
     let retorno = await response.json();
-    const posts = Object.keys(json).map(i => JSON.parse(json[Number(i)]));
+    const {postagens} = retorno;
     
     for (let post of posts) {
         console.log(post)
@@ -219,7 +219,7 @@ const addPost = async () => {
     await fetch('https://express-server-production-d5bc.up.railway.app/posts', config)
         .then(response => response.json())
         .then(retorno => {
-            const id = retorno.id;
+            const {id} = retorno;
             if (response.status == 201 && id) {
                 const post = {
                     "id": id,
@@ -255,7 +255,7 @@ const updatePost = async (postid) => {
     await fetch(`https://express-server-production-d5bc.up.railway.app/posts/${postid}`, config)
         .then(response => response.json())
         .then(retorno => {
-            const post = retorno.postagem;
+            const {postagem} = retorno;
             if (response.status == 200) {
                 postTitle.innerText = post.title;
                 postText.innerText = post.text;
