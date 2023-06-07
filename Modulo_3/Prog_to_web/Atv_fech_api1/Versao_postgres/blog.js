@@ -21,8 +21,7 @@ const curtirPost = async (postid) => {
 
 
 const appendPost = (post) => {
-    //console.log(post);
-    //console.log(post["id"]);
+    
     const template = document.getElementById('post_template');
     const postElement = document.importNode(template.content, true);
     const id = post["id"];
@@ -180,12 +179,7 @@ const deleteComment = async (postid, commentid) => {
 
 
 const loadPosts = async () => {
-    /*blog.js:26  Uncaught (in promise) TypeError: Cannot set properties of null (setting 'id')
-    at appendPost (blog.js:26:43)
-    at blog.js:182:17
-    at async loadPosts (blog.js:175:5)
-    at async window.onload (blog.js:294:5) */
-
+    
     const config = {
         'method': 'GET',
         'headers': {
@@ -219,8 +213,8 @@ const getComments = async (postid) => {
 }
 
 const addPost = async () => {
-    const postTitle = document.getElementById('new_post_title');
-    const postText = document.getElementById('new_post_text');
+    const postTitle = document.getElementById('post_title');
+    const postText = document.getElementById('post_text');
     const title = postTitle.value
     const text = postText.value
 
@@ -239,10 +233,10 @@ const addPost = async () => {
     };
 
     await fetch('https://express-server-production-d5bc.up.railway.app/posts', config)
-        .then(response => response.json())
-        .then(retorno => {
+        .then(response => {
+            const retorno = response.json();
             const {id} = retorno;
-            if (response.status == 201 && id) {
+            if (response.status === 201 && id) {
                 const post = {
                     "id": id,
                     "title": title,
