@@ -21,31 +21,37 @@ const curtirPost = async (postid) => {
 
 
 const appendPost = (post) => {
-    console.log(post);
-    console.log(post.id);
+    //console.log(post);
+    //console.log(post["id"]);
     const template = document.getElementById('post_template');
     const postElement = document.importNode(template.content, true);
-    postElement.getElementById('post').setAttribute("id", post.id);
+    const id = post["id"];
+    postElement.querySelector('.post').id = id;
 
     const postTitle = postElement.querySelectorAll('h3')[0]
     postTitle.innerText = post.title;
     const postItens = postElement.querySelectorAll('p')
     postItens[0].innerText = post.text;
     postItens[1].innerText = post.likes + " like(s)";
-
-    const comentarios = post.comentarios.sort((a, b) => {
-        return a.data_criacao < b.data_criacao ? 1 : -1;
-    });
-
+    
     const comentariosdiv = postElement.querySelectorAll('div')[0]
+    if(post.comentarios && post.comentarios.length > 0){
+        const comentarios = post.comentarios.sort((a, b) => {
+            return a.data_criacao < b.data_criacao ? 1 : -1;
+        });
+        
+        for (let comentario of comentarios) {
+            const comentarioElement = document.createElement('p');
+            comentarioElement.innerText = comentario.text;
+            comentarioElement.className = 'comentario';
+            comentarioElement.id = comentario.id;
+            comentariosdiv.append(comentarioElement);
+        }
 
-    for (let comentario of comentarios) {
-        const comentarioElement = document.createElement('p');
-        comentarioElement.innerText = comentario.text;
-        comentarioElement.className = 'comentario';
-        comentarioElement.id = comentario.id;
-        comentariosdiv.append(comentarioElement);
+    }else{
+        comentariosdiv.innerText = "Sem comentarios";
     }
+
 
     postItens[2].innerText = post.comentarios.length + " comentario(s)";
 
@@ -190,10 +196,26 @@ const loadPosts = async () => {
     let retorno = await response.json();
     const {postagens} = retorno;
     
-    for (let post of posts) {
-        console.log(post)
+    for (let i = 0; i < postagens.length; i++) {
+        const post = postagens[i]
+        console.log(post["id"])
+        post.comentarios = await getComments(post["id"]);
         appendPost(post);
     }
+}
+
+const getComments = async (postid) => {
+    const config = {
+        'method': 'GET',
+        'headers': {
+            'Content-Type': 'application/json'
+        }
+    };
+
+    const response = await fetch(`https://express-server-production-d5bc.up.railway.app/posts/${postid}/comentarios`, config);
+    const retorno = await response.json();
+    const {comentarios} = retorno;
+    return comentarios;
 }
 
 const addPost = async () => {
