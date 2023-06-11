@@ -22,46 +22,76 @@
 		</header>
 
 		<main class="row">
+			<section id="sla">
+				<p id="nome_usuario-msg">Olá, fulano de tal</p>
+				<button id="logout">Logout</button>
+			</section>
 			<section id="new_post">
 				<h3>New post</h3>
-				<input id="post_title" placeholder="Post title" type="text">
-				<textarea id="post_text" placeholder="Type your message..." cols=50 rows=5></textarea>
+				<p id="msg_erro"></p>
+				<input id="input-post_title" placeholder="Post title" type="text">
+				<textarea id="input-post_text" placeholder="Type your message..." cols=50 rows=5></textarea>
 				<button id="add_post">Add post</button>
 			</section>
 
 			<hr>
 			<section id="timeline">
-				<!-- ... -->
+
 				<h2>My timeline</h2>
 
 				<template id="post_template">
 
 					<article class="post">
-						<h3>Post title</h3>
-						<p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolore aliquam optio perferendis
+						<p id="msg_erro-post"></p>
+						<h3 id="post_title">Post title</h3>
+						<hr id="post-hr">
+						<p id="content-post">Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolore aliquam
+							optio perferendis
 							deleniti, inventore fugit iste sapiente. Aliquid labore aut ipsam enim incidunt harum,
 							minima porro deleniti unde possimus rem!</p>
-						<p id="likes"><a href="" id="curtir_bnt"> Curtir </a> 10 like(s)</p>
-
-						<textarea id="new_comment_text" cols="30" rows="10"
-							placeholder="Insira o seu comentário aqui!!!"></textarea>
-						<p id="count_comments"><a href="" id="comentar_bnt"> Comentar</a>10 comentario(s)</p>
-						<hr>
-						<div id="comentarios">
-							<h4>Comments</h4>
-							<hr>
-							<article class="comment">
-								<p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Saepe, blanditiis alias.
-									Cupiditate molestiae impedit vero amet blanditiis! Voluptatibus molestiae distinctio
-									quis
-									sit quidem iste, ipsum asperiores ducimus exercitationem, vero rem.</p>
-							</article>
+						<hr id="post-hr">
+						<p id="criador">Criado por: Fulano de tal..</p>
+						<button id="excluir_post_bnt"> Excluir Post</button>
+						<div id="likes">
+							<a href="#" id="curtir_bnt"> Curtir </a>
+							<span id="qtd_likes"> 10 like(s) </span>
 						</div>
-						<hr>
+						<div id="comentarios-conteiner">
+
+							<a href="#" id="add_comment">Adicionar Comentário</a>
+
+							<section id="new_comment" hidden>
+								<h4>Comentar</h4>
+								<p id="comments_error"></p>
+								<textarea id="new_comment_text" cols="30" rows="2"
+									placeholder="Insira o seu comentário aqui!!!"></textarea>
+								<div>
+									<a href="#" id="comentar_bnt"> Enviar</a>
+									<a href="#" id="cancelar_comentario_bnt">Cancelar</a>
+								</div>
+							</section>
+							<p id="count_comments">10 comentario(s)</p>
+							<h4>Comentarios</h4>
+							<hr>
+							<div id="comentarios">
+							</div>
+							<hr>
 					</article>
+
 				</template>
 
-				<!-- ... -->
+				<template id="comentario-template">
+					<div class="comentario">
+						<p id="msg_erro-comentario"></p>
+						<label for="comment_text">Comentário: </label>
+						<p id="comment_text">Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolore aliquam
+							optio perferendis
+							deleniti, inventore fugit iste sapiente. Aliquid labore aut ipsam enim incidunt harum,
+							minima porro deleniti unde possimus rem!</p>
+						<p id="criador">Criado por: Fulano de tal..</p>
+						<a href="#" id="excluir_comentario_bnt"> Excluir</a>
+					</div>
+				</template>
 				<br>
 			</section>
 
