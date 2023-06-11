@@ -117,6 +117,24 @@ const appendPost = async (post) => {
                 appendComment(id, comentario);
             }
 
+            if (comentariosElement.children.length > 3) {
+                const verMaisBnt = comentariosdiv.querySelector('#ver_mais');
+                verMaisBnt.removeAttribute('hidden');
+                verMaisBnt.addEventListener('click', () => {
+                    for (let i = 3; i < comentariosElement.children.length; i++) {
+                        comentariosElement.children[i].removeAttribute('hidden');
+                    }
+                    verMaisBnt.innerText = "Ver menos";
+                    verMaisBnt.addEventListener('click', () => {
+                        for (let i = 3; i < comentariosElement.children.length; i++) {
+                            comentariosElement.children[i].setAttribute('hidden', true);
+                        }
+                        verMaisBnt.innerText = "Ver mais";
+                    });
+                });
+                atualizacomentariosPost(post.id);
+            }
+
         } else {
             comentariosElement.innerText = "Sem comentarios";
         }
@@ -158,7 +176,6 @@ const appendComment = async (postid, comment) => {
             }
         } else {
             console.log(`post id ${postid} não encontrado`)
-            // console.log(comment)
         }
     }
     catch (error) {
@@ -199,6 +216,7 @@ const addComment = async (postid) => {
                 if (response.status === 201) {
                     appendComment(postid, { id, text, criador: nome_de_usuario, id_usuario });
                     atualizaQtdComentarios(postid)
+                    atualizacomentariosPost(postid);
                     document.getElementById(postid).querySelector(`#comments_error`).innerText = "";
                 } else {
                     document.getElementById(postid).querySelector(`#comments_error`).innerText = "Erro ao adicionar comentario!!";
@@ -209,6 +227,41 @@ const addComment = async (postid) => {
         console.log(error)
     }
 }
+
+const atualizacomentariosPost = async (postid) => {
+    try {
+        const comentariosElement = document.getElementById(postid).querySelector('#comentarios');
+
+        if (comentariosElement) {
+            if (comentariosElement.children.length === 0) {
+                comentariosElement.innerText = "Sem comentarios";
+            } else if (comentariosElement.children.length > 3) {
+                for (let i = 3; i < comentariosElement.children.length; i++) {
+                    comentariosElement.children[i].setAttribute('hidden', true);
+                }
+                const verMaisBnt = comentariosElement.querySelector('#ver_mais');
+                verMaisBnt.innerText = "Ver mais";
+
+                verMaisBnt.addEventListener('click', () => {
+                    for (let i = 3; i < comentariosElement.children.length; i++) {
+                        comentariosElement.children[i].removeAttribute('hidden');
+                    }
+                    verMaisBnt.innerText = "Ver menos";
+                    verMaisBnt.addEventListener('click', () => {
+                        for (let i = 3; i < comentariosElement.children.length; i++) {
+                            comentariosElement.children[i].setAttribute('hidden', true);
+                        }
+                        verMaisBnt.innerText = "Ver mais";
+                    });
+                });
+                verMaisBnt.removeAttribute('hidden');
+            }
+        }
+    } catch (error) {
+        console.log(error)
+    }
+}
+
 
 
 const deleteComment = async (postid, commentid) => {
@@ -228,6 +281,8 @@ const deleteComment = async (postid, commentid) => {
                     comentarioElement.remove();
                     atualizaQtdComentarios(postid);
                     document.getElementById(postid).querySelector(`#comments_error`).innerText = "";
+                    atualizacomentariosPost(postid);
+
                 } else {
                     response.text().then(text => {
                         document.getElementById(postid).querySelector(`#comments_error`).innerText = text;
