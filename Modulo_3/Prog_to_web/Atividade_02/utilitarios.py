@@ -1,104 +1,258 @@
-import os
-from utilitarios import confere_link, search, set_ranks, exibir_dados_obtidos
+import requests
+import requests_cache
+from bs4 import BeautifulSoup
+from typing import List
 
-class Historico:
-    def __init__(self, url: str, palavra: str, prof_busca: int):
+import validators
+requests_cache.install_cache('banco')
+
+class Armazena_links:
+    def __init__(self):
+        self.links_sem_repetir = []
+        self._novos_links = []
+        self._total_links = []
+
+    @property
+    def links(self):
+        return self.links_sem_repetir
+
+    @links.setter
+    def links(self, value):
+        self.links_sem_repetir = value
+
+    def add_novo_link(self, link):
+        self._total_links.append(link)
+        if link not in self.links_sem_repetir:
+            self._novos_links.append(link)
+
+    def conferir_link(self, link: str):
+        if link is not None and link != '':
+            self._total_links.append(link)
+            return link in self.links_sem_repetir
+        return False
+
+    def add_novos_links(self, links):
+        for link in links:
+            self._total_links.append(link)
+            if link not in self.links_sem_repetir:
+                self._novos_links.append(link)
+        self.links_sem_repetir.extend(self._novos_links)
+        self._novos_links = []
+
+    def reseta_novos_links(self):
+        self.links_sem_repetir.extend(self._novos_links)
+        self._novos_links = []
+
+    def get_all_links(self):
+        return self._total_links
+
+
+class Url:
+    def __init__(self, url: str):
         self._url = url
-        self._palavra = palavra
-        self._prof_busca = prof_busca
+        self.links = []
+        self._ocorrencias = ocorrencia(url)
+        self.rank = 0
+        self.referencias = 0
 
     @property
     def url(self):
         return self._url
 
     @property
-    def palavra(self):
-        return self._palavra
+    def ocorrencias(self):
+        return self._ocorrencias.ocorrencias_palavra
+
+    @ocorrencias.setter
+    def ocorrencias(self, value):
+        self._ocorrencias = value
 
     @property
-    def prof_busca(self):
-        return self._prof_busca
+    def qtd(self):
+        return self._ocorrencias.qtd
 
 
-def confere_op(opcao: int, max: int, min: int):
-    if opcao < min or opcao > max:
-        return False
-    return True
+class ocorrencia:
+    def __init__(self, url: str):
+        self._url = url
+        self._ocorrencias_palavra = []
+        self._qtd_ocorrencias = 0
+
+    @property
+    def url(self):
+        return self._url
+
+    @property
+    def ocorrencias_palavra(self):
+        return self._ocorrencias_palavra
+
+    @property
+    def qtd(self):
+        return self._qtd_ocorrencias
 
 
-def exibe_opcoes(opcoes: list):
-    print("Opções disponíveis:")
-    for opcao in opcoes:
-        print(opcao)
+def remover_url_sem_ocorrencias(resultados: List[Url]):
+    return [url for url in resultados if isinstance(url, Url) and url.qtd > 0]
 
 
-def exibir_Historicos(Historico_buscas=[]):
-    print("- - - - - - - - - - - - - Histórico de Buscas - - - - - - - - - - - - -\n")
-    if len(Historico_buscas) == 0:
-        print("Nenhum histórico de busca encontrado.")
+def set_ranks(resultados: List[Url], links: Armazena_links):
+    try:
+        resultados = add_ref(links, resultados)
+        resultados = remover_url_sem_ocorrencias(resultados)
+
+        i = 0
+        for result in resultados:
+            if isinstance(result, Url):
+
+                qtd_ocorrencias = result.qtd
+                if qtd_ocorrencias == 0:
+                    resultados.pop(i)
+                    continue
+                rank = qtd_ocorrencias * 10
+                ref = result.referencias
+
+                if (ref <= 10):
+                    rank += ref * 0.5
+                else:
+                    rank += ref * 1.5
+
+                result.rank = rank
+                i += 1
+        retorno = sorted(resultados, key=lambda x: x.rank if isinstance(
+            x, Url) else resultados.pop(resultados.index(x)), reverse=True)
+        return retorno
+
+    except Exception as e:
+        print('Ops, ocorreu um erro na função: "set_ranks"... \nErro: ', e)
         return None
 
-    i = 1
-    for historico in Historico_buscas:
-        if isinstance(historico, Historico):
-            print(f"Busca n°{i}")
-            print(f"Url: {historico.url}")
-            print(f"Palavra: {historico.palavra}")
-            print(f"Profundidade da Busca: {historico.prof_busca}")
-            i += 1
+
+def buscar_ocorrencias(url, palavra: str):
+    try:
+        pagina = requests.get(url)
+        ocorrencias = ocorrencia(url)
+        texto = BeautifulSoup(pagina.text, 'html.parser')
+        print(f"Obtendo as ocorrencias de {palavra} na pagina '{url}'..\n")
+        trechos = texto.find_all(string=lambda text: palavra in text)
+    except Exception as e:
+        print("Ocorreu um erro ao buscar o texto presente no body da pagina, url: ", url)
+        print("Erro: ", e)
+        return ['']
+
+    for trecho in trechos:
+        if trecho and trecho.text.strip():
+            ocorrencias.ocorrencias_palavra.append(trecho.text)
+            ocorrencias._qtd_ocorrencias += trecho.text.count(palavra)
+
+    return ocorrencias
 
 
-def App():
-    print("- - - - - - - - - - - - - Menu - - - - - - - - - - - - -\n")
+def search(url_inicio: str, palavra: str, prof_busca: int):
+    try:
+        links = Armazena_links()
+        dados = []
 
-    opcoes_menu = ["1 - Iniciar nova busca",
-                   "2 - Exibir histórico de Busca", "0 - Sair"]
-    exibe_opcoes(opcoes_menu)
-    opcao = int(input("=> "))
+        print("Buscando por: ", palavra)
+        dados.append(Url(url_inicio))
+        links.add_novo_link(url_inicio)
+        [dados, links] = get_links(links, palavra, dados, prof_busca)
 
-    Historico_buscas = []
+        return [dados, links]
+    except Exception as e:
+        print('Ops, ocorreu um erro na função: "search"... \nErro: ', e)
+        return None
 
-    while opcao != 0:
-        try:
-            while not confere_op(opcao, 2, 0):
-                print("Ops, opção inválida, digite novamente: ")
-                opcao = int(input("=> "))
 
-            if opcao == 1:
-                print("Digite a url que deseja iniciar a busca a seguir: ")
-                url = input('=> ')
-                while not confere_link(url):
-                    print("\nOps, a url inserida é inválida, digite novamente: ")
-                    url = input("=> ")
+def add_ref(links: Armazena_links, results: List[Url]):
+    try:
+        for result in results:
+            if isinstance(result, Url):
+                for link in links.get_all_links():
+                    if result.url == link:
+                        result.referencias += 1
+        return results
+    except Exception as e:
+        print('Ops, ocorreu um erro na função: "add_ref"... \nErro: ', e)
+        return None
 
-                print("ok..\n Agora digite a palavra que deseja buscar: ")
-                palavra = input('=> ')
 
-                print("Certo..\n Agora insira a Profundidade da Busca: ")
-                prof_busca = int(input("=> "))
-                while not isinstance(prof_busca, int):
+def get_links(links: Armazena_links, palavra: str, dados, prof_busca: int):
+    try:
+        links_novos = []
+        for url in links._novos_links:
+            if not links.conferir_link(url):
+                pagina = requests.get(url)
+                soup = BeautifulSoup(pagina.text, 'html.parser')
+                tags_a = soup.find_all('a')
+                for a in tags_a:
+                    link = a.get('href')
+                    if not link or link is None:
+                        continue
+                    novo_link = ''
+
+                    if link[0] == '/':
+                        if link.startswith('//'):
+                            novo_link = Url(f"http:{link}")
+                        elif dados[0].url.endswith('/'):
+                            novo_link = Url(
+                                f"{dados[0].url}{link[1:]}")
+                        else:
+                            novo_link = Url(
+                                f"{dados[0].url}{link}")
+                        links_novos.append(novo_link)
+                    elif link.startswith(dados[0].url):
+                        novo_link = Url(link)
+                        links_novos.append(novo_link)
+                    else:
+                        continue
+
+                    ocorrencias = buscar_ocorrencias(novo_link.url, palavra)
+                    novo_link.ocorrencias = ocorrencias
+                    dados.append(novo_link)
+
+        links.reseta_novos_links()
+        links.add_novos_links(links_novos)
+
+        retorno = [dados, links]
+
+        if len(links._novos_links) > 0 and prof_busca > 0:
+            aux = get_links(links, palavra, dados,
+                            prof_busca - 1)
+            retorno[0].append(aux[0])
+            retorno[1] = aux[1]
+
+        return retorno
+    except Exception as e:
+        print('Ops, ocorreu um erro na função: "get_links"... \nErro: ', e)
+        return None
+
+
+def exibir_dados_obtidos(Dados_resultantes: List[Url]):
+    try:
+        print("\n- - - - - - - - - - - - Exibindo Resultados da Busca - - - - - - - - - - - -\n")
+        if Dados_resultantes:
+            for i in range(len(Dados_resultantes) - 1):
+                if Dados_resultantes[i] is not None and isinstance(Dados_resultantes[i], Url) and Dados_resultantes[i].qtd > 0:
+                    print(f"URL: {Dados_resultantes[i].url}")
+                    x = 1
+                    print("Ocorrencias: \n")
+                    for ocorrencia in Dados_resultantes[i].ocorrencias:
+                        print(f"{x} - {ocorrencia}\n")
+                        x += 1
+                    print(f"Qtd Ocorrencias: {Dados_resultantes[i].qtd}")
                     print(
-                        "Ops, a profundidade da busca deve ser um número inteiro, digite novamente: ")
-                    prof_busca = int(input("=> "))
-
-                [retorno, links] = search(url, palavra, prof_busca)
-                Historico_buscas.append(Historico(url, palavra, prof_busca))
-                retorno = set_ranks(retorno, links)
-                exibir_dados_obtidos(retorno)
-            elif opcao == 2:
-                exibir_Historicos(Historico_buscas)
-
-            if opcao != 0:
-                input("\n\nPressione qualquer tecla para sair...")
-                exibe_opcoes(opcoes_menu)
-                opcao = int(input("=> "))
-
-        except Exception as e:
-            print("Ops, ocorreu um erro, tente novamente.")
-            print(f"Erro: {e}")
-
-    input("\n\nPressione qualquer tecla para sair...")
-    os.system('cls' if os.name == 'nt' else 'clear')
+                        f'Este site foi referenciado {Dados_resultantes[i].referencias} vezes')
+                else:
+                    print("Dado inválido encontrado...\n")
+                    Dados_resultantes.pop(i)
+        else:
+            print("Ops, nenhum dado foi encontrado...")
+    except Exception as e:
+        print('Ops, ocorreu um erro na função: "exibir_dados_obtidos"... \nErro: ', e)
 
 
-App()
+def confere_link(url: str):
+    if validators.url(url):
+        return url.startswith('http://') or url.startswith('https://')
+    return False
+
