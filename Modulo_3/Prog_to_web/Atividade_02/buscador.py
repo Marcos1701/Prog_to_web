@@ -1,7 +1,6 @@
 import os
 from utilitarios import confere_link, search, set_ranks, exibir_dados_obtidos
 
-
 class Historico:
     def __init__(self, url: str, palavra: str, prof_busca: int):
         self._url = url
